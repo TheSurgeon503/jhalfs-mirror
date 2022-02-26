@@ -6,8 +6,12 @@
   "automated linux from scratch", and the initials "jh" have been kept since
   the original "jhalfs-0.2" code developed by Jeremy Huntwork.
 
-     The list of supported books can be found at
-  http://wiki.linuxfromscratch.org/alfs/wiki/SupportedBooks.
+     The files in this branch are the last to allow building the CLFS book.
+  The CLFS project (https://trac.clfs.org/) has been dead for almost five
+  years now (written in February 2022), and it does not make sense to keep
+  compativbility with it in further developments of the jhalfs project.
+  The main project will only support the various branches (including a
+  clfs-ng one and one dedicated to building on arm CPUs) of LFS and BLFS.
 
      The documentation is split among various README.* files. Here is a list
   of what is in which:
