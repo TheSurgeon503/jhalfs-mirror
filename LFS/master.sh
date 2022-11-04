@@ -287,9 +287,11 @@ build_Makefile() {           #
   done
 
   # Drop in the main target 'all:' and the chapter targets with each sub-target
-  # as a dependency.
+  # as a dependency. Also prevent running targets in parallel.
 (
     cat << EOF
+
+.NOTPARALLEL:
 
 all:	ck_UID ck_terminal mk_SETUP mk_LUSER mk_SUDO mk_CHROOT mk_BOOT create-sbu_du-report mk_BLFS_TOOL mk_CUSTOM_TOOLS
 	@sudo env LFS=\$(MOUNT_PT) kernfs-scripts/teardown.sh
