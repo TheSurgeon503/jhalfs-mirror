@@ -52,7 +52,10 @@ inline_doc
 
   echo -ne "${TXT}${spaceSTR:${#TXT}} ${L_arrow}${BOLD}${tst_version}${OFF}${R_arrow}"
 
-  IFS=".-(pab"   # Split up w.x.y.z as well as w.x.y-rc  (catch release candidates)
+  # Split up w.x.y.z as well as w.x.y-rc  (catch release candidates).
+  # Also strip trailing "+" which appears for kernel built from a Git
+  # repository where HEAD is not a tag.
+  IFS=".-(pab+"
   set -- $ref_version # set positional parameters to minimum ver values
   ref_major=$1; ref_minor=$2; ref_revision=$3
   #
