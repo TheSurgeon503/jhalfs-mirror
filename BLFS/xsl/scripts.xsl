@@ -538,16 +538,19 @@ echo "</xsl:text>
       <!-- Additional package information -->
       <!-- special cases for llvm -->
       <xsl:when test="contains(string(),'Recommended Download')">
-        <xsl:apply-templates select="following-sibling::itemizedlist[1]"
+        <xsl:apply-templates select="following-sibling::itemizedlist
+                             [preceding-sibling::bridgehead[1]=current()]"
                              mode="additional"/>
       </xsl:when>
       <xsl:when test="contains(string(),'Optional Download')">
-        <xsl:apply-templates select="following-sibling::itemizedlist"
+        <xsl:apply-templates select="following-sibling::itemizedlist
+                             [preceding-sibling::bridgehead[1]=current()]"
                              mode="additional"/>
       </xsl:when>
       <!-- All other additional packages have "Additional" -->
       <xsl:when test="contains(string(),'Additional')">
-        <xsl:apply-templates select="following-sibling::itemizedlist"
+        <xsl:apply-templates select="following-sibling::itemizedlist
+                             [preceding-sibling::bridgehead[1]=current()]"
                              mode="additional"/>
       </xsl:when>
       <!-- Do not do anything if the dev has created another type of
