@@ -453,7 +453,7 @@ generate_dependency_tree() { #
                   cycle
                 3 if we are backing up to the parent of a circular dep
                   and there are optiional deps in the cycle
-    modifies:   vars: ParentNode is set when return is not 0
+    modifies:   vars: parentNode is set when return is not 0
     output:     files: for each <pkg> with dependencies in $1,
                        a file <pkg>.tree and its dependencies
     on error:   nothing
