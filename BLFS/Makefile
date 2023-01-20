@@ -60,10 +60,15 @@ LFS-BRANCH = trunk
 GIT = https://git.linuxfromscratch.org/blfs.git
 BLFS-BRANCH = trunk
 
+# Name of a file that is not tracked by git in BLFS_XML
+# but has to be updated
+PYHOSTED = general/prog/python-dependencies/pythonhosted.xml
+
 ALLXML := $(filter-out $(RENDERTMP)/%, \
+            $(filter-out $(BLFS_XML)/$(PYHOSTED), \
               $(shell if [ -d $(BLFS_XML) ]; then \
                         find $(BLFS_XML) -name \*.xml; \
-                      fi))
+                      fi)))
 ALLXMLLFS:= $(filter-out $(LFSTMP)/%, \
               $(shell if [ -d $(LFS_XML) ]; then \
                         find $(LFS_XML) -name \*.xml; \
@@ -170,9 +175,13 @@ $(LFS_FULL): $(LFS_XML) $(LFS_XML)/general.ent $(ALLXMLLFS) $(ALLXSLLFS)
 
 $(BLFS_FULL): $(BLFS_XML) $(BLFS_XML)/general.ent $(ALLXML) $(ALLXSL)
 	$(Q)cd $(BLFS_XML) && if [ -x git-version.sh ] ; then \
-	     echo "Processing BLFS version..."; \
-	     ./git-version.sh $(REV); \
-	fi
+            echo "Processing BLFS version...";                \
+            if grep -q PYHOSTED Makefile; then                \
+               $(MAKE) -C $(BLFS_XML) REV=$(REV) $(PYHOSTED); \
+            else                                              \
+               ./git-version.sh $(REV);                       \
+            fi;                                               \
+        fi
 	$(Q)[ -d $(RENDERTMP) ] || mkdir -p $(RENDERTMP)
 	@echo "Adjusting BLFS for revision $(REV)..."
 	$(Q)xsltproc --nonet --xinclude                          \
@@ -230,4 +239,4 @@ clean:
 	rm -rf $(TOPDIR)/dependencies $(TOPDIR)/book-html $(TOPDIR)/scripts
 
 FORCE:
-.PHONY: clean all update $(CONFIG_OUT) version FORCE
+.PHONY: clean all update $(CONFIG_OUT) FORCE
