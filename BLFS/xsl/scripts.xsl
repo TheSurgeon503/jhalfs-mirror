@@ -944,7 +944,8 @@ echo Size after install: $(sudo du -skx --exclude home $BUILD_DIR) >> $INFOLOG
   <xsl:template name="outputpkgdest">
     <xsl:param name="outputstring" select="'foo'"/>
     <xsl:choose>
-      <xsl:when test="contains($outputstring,'make ')">
+      <xsl:when test="contains(normalize-space($outputstring),' make ') or
+                      starts-with($outputstring, 'make ')">
         <xsl:choose>
           <xsl:when test="not(starts-with($outputstring,'make'))">
             <xsl:call-template name="outputpkgdest">
