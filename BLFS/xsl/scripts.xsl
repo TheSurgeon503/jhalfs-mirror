@@ -930,22 +930,15 @@ echo Size after install: $(sudo du -skx --exclude home $BUILD_DIR) >> $INFOLOG
   <xsl:template match="userinput" mode="destdir">
     <xsl:text>
 </xsl:text>
-    <xsl:choose>
-      <xsl:when test="./literal">
-        <xsl:call-template name="outputpkgdest">
-          <xsl:with-param name="outputstring" select="text()[1]"/>
-        </xsl:call-template>
-        <xsl:apply-templates select="literal"/>
-        <xsl:call-template name="outputpkgdest">
-          <xsl:with-param name="outputstring" select="text()[2]"/>
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:call-template name="outputpkgdest">
-          <xsl:with-param name="outputstring" select="string()"/>
-        </xsl:call-template>
-      </xsl:otherwise>
-    </xsl:choose>
+    <xsl:for-each select="./literal">
+      <xsl:call-template name="outputpkgdest">
+        <xsl:with-param name="outputstring" select="preceding-sibling::text()[1]"/>
+      </xsl:call-template>
+      <xsl:apply-templates select="."/>
+    </xsl:for-each>
+    <xsl:call-template name="outputpkgdest">
+      <xsl:with-param name="outputstring" select="text()[last()]"/>
+    </xsl:call-template>
   </xsl:template>
 
   <xsl:template name="outputpkgdest">
