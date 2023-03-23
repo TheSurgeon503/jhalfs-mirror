@@ -28,6 +28,7 @@ declare BookXml="${TOPDIR}/book.xml"
 declare MakeBook="${TOPDIR}/xsl/make_book.xsl"
 declare GetVersion="${TOPDIR}/xsl/get_version.xsl"
 declare MakeScripts="${TOPDIR}/xsl/scripts.xsl"
+declare ListLFS="${TOPDIR}/xsl/list_lfs.xsl"
 declare BookHtml="${TOPDIR}/book-html"
 declare BLFS_XML="${TOPDIR}/blfs-xml"
 declare -a TARGET
