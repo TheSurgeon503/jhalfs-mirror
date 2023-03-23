@@ -297,4 +297,50 @@ xsltproc --xinclude --nonet                           \
 chmod -R +x scripts
 echo -e "done\n"
 
+if [ -n "$DEP_CHECK" ]; then
+   if (( ${#TARGET[*]} != 1 )); then
+      printf "\nWARNING: If dependencies are checked, only one package\n"
+      printf "         shoud be selected. Not generating check code.\n"
+      exit
+   fi
+
+   LIST_LFS="$(xsltproc $ListLFS $LFS_FULL)"
+   LIST_NEEDED="$(echo $FULL_LIST)"
+   LIST_INSTALLED="$(porg -a | sed 's/-[[:digit:]].*//')"
+   LIST_UNNEEDED=
+   for p in $LIST_INSTALLED; do
+      case " $LIST_LFS " in *" $p "*)  continue ;; esac
+      case " $LIST_NEEDED " in *" $p "*)  continue ;; esac
+      LIST_UNNEEDED="$LIST_UNNEEDED $p"
+   done
+   cat >head.tmp <<EOF
+#!/bin/bash
+set -e
+
+# Remove all unneeded packages
+VERSIONED_LIST=
+for p in $LIST_UNNEEDED; do
+   VERSIONED_LIST="\$VERSIONED_LIST \$(porg \$p)"
+   porg -rb \$p
+done
+
+# Function to restore packages
+restore_pack {
+for p in \$VERSIONED_LIST; do
+   porgball -e -l /var/lib/packages/\${p}.porg.tar.gz
+done
+}
+
+trap restore_pack ERR
+
+EOF
+   cat >tail.tmp <<EOF
+restore_pack
+exit
+EOF
+
+   sed -e "1,2d" -e '$d' scripts/*${TARGET} >script.tmp
+   cat head.tmp script.tmp tail.tmp >scripts/*${TARGET}
+   rm *.tmp
+fi
 #clean_configuration
