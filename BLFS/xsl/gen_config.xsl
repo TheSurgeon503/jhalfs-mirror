@@ -89,20 +89,41 @@ menu    "Build settings"
                 path.
 
     config	DEL_LA_FILES
-	bool "Remove libtool .la files after package installation"
-	default y
-	help
+    bool "Remove libtool .la files after package installation"
+    default y
+    help
             This option should be active on any system mixing libtool
             and meson build systems. ImageMagick .la files are preserved.
 
     config	STATS
-	bool "Generate statistics for the requested package(s)"
-	default n
-	help
+    bool "Generate statistics for the requested package(s)"
+    default n
+    help
             If you want timing and memory footprint statistics to be
             generated for the packages you build (not their dependencies),
             set this option to y. Due to the book layout, several scripts
             are not functional in this case. Please review them.
+
+    config	DEP_CHECK
+    bool "Check dependencies of the requested package(s)"
+    default n
+    depends on WRAP_INSTALL
+    help
+      Setting this option does not work if more than one package
+      is selected. It will do the following:
+      - Build the dependency tree and generate a build ordered list
+        disregarding already installed packages
+      - Generate the scripts for the dependencies not already
+        installed (as usual)
+      - Generate a stript that:
+        + removes all unneeded packages using porg
+          (at this point the blfs_tools cannot be used anymore,
+          and your system may be non functional, so use a console
+          for that, not a graphical environment)
+        + installs the package
+        + restores all the previously removed packages
+      Note that this script may not be the last one, if there are runtime
+      dependencies
 
 endmenu
 
