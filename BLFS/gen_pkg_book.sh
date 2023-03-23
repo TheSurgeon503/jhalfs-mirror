@@ -38,6 +38,7 @@ declare WRAP_INSTALL
 declare PACK_INSTALL
 declare DEL_LA_FILES
 declare STATS
+declare DEP_CHECK
 declare SRC_ARCHIVE
 declare SRC_SUBDIRS
 declare BUILD_ROOT
@@ -69,6 +70,7 @@ parse_configuration() {    #
       PACK_INSTALL=*  | \
       DEL_LA_FILES=*  | \
       STATS=*         | \
+      DEP_CHECK=*     | \
       LANGUAGE=*      | \
       SUDO=*          | \
       SRC_ARCHIVE=*   | \
@@ -108,7 +110,7 @@ parse_configuration() {    #
 validate_configuration() { #
 #--------------------------#
   local -r dotSTR=".................."
-  local -r PARAM_LIST="DEP_LEVEL SUDO LANGUAGE MAIL_SERVER WRAP_INSTALL PACK_INSTALL DEL_LA_FILES STATS SRC_ARCHIVE SRC_SUBDIRS BUILD_ROOT BUILD_SUBDIRS KEEP_FILES JOBS CFG_CFLAGS CFG_CXXFLAGS CFG_LDFLAGS"
+  local -r PARAM_LIST="DEP_LEVEL SUDO LANGUAGE MAIL_SERVER WRAP_INSTALL PACK_INSTALL DEL_LA_FILES STATS DEP_CHECK SRC_ARCHIVE SRC_SUBDIRS BUILD_ROOT BUILD_SUBDIRS KEEP_FILES JOBS CFG_CFLAGS CFG_CXXFLAGS CFG_LDFLAGS"
   local -r PARAM_VALS='${config_param}${dotSTR:${#config_param}} ${L_arrow}${BOLD}${!config_param}${OFF}${R_arrow}'
   local config_param
   local -i index
