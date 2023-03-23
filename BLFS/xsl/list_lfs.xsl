@@ -9,6 +9,11 @@
     <xsl:text>bootscripts </xsl:text>
     <xsl:text>lfs-bootscripts </xsl:text>
     <xsl:text>kernel </xsl:text>
+    <xsl:text>porg </xsl:text>
+    <xsl:text>tzdata </xsl:text>
+    <!-- the next two packages are not in LFS, but jhalfs needs them -->
+    <xsl:text>sudo </xsl:text>
+    <xsl:text>wget </xsl:text>
     <xsl:apply-templates select=".//chapter[@id='chapter-building-system']/sect1/sect1info/productname"/>
   </xsl:template>
 
