@@ -321,13 +321,13 @@ set -e
 VERSIONED_LIST=
 for p in $LIST_UNNEEDED; do
    VERSIONED_LIST="\$VERSIONED_LIST \$(porg \$p)"
-   porg -rb \$p
+   sudo porg -rb \$p
 done
 
 # Function to restore packages
-restore_pack {
+restore_pack () {
 for p in \$VERSIONED_LIST; do
-   porgball -e -l /var/lib/packages/\${p}.porg.tar.gz
+   sudo porgball -e -l /var/lib/packages/\${p}.porg.tar.gz
 done
 }
 
