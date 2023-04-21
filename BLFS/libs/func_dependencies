@@ -522,7 +522,13 @@ while read prio_of_dep build_of_dep id_of_dep; do
 # The parent has the same link without the last entry.
 # We do not need otherlink anymore so just destroy the last element
         unset otherlink[-1]
-        parentNode=$(grep ^"${otherlink[*]}"\$ -l *)
+# We cannot use grep -l, because we need to restrict to the first line,
+# since the prio line may match
+        for f in *.tree; do
+          if head -n1 $f | grep -q ^"${otherlink[*]}"\$; then
+             parentNode=$f; break
+          fi
+        done
         return $p2
       fi
     else # not circular: prune tree (but not .dep, since it may happen that
