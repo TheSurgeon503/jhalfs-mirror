@@ -116,7 +116,7 @@ EOF
 # So we have to read that command too, since it may be assumed
 # that the preceding package is a dependency of the following,
 # except the first.
-  list_cat="$(sed -n '/>cat/,/EOF</p' $file | grep -v 'cat\|EOF' |
+  list_cat="$(sed -n '/>cat/,/EOF</p' $file | grep -v 'cat\|EOF\|#' |
               awk '{ print $NF }' | sed 's/-&.*//')"
 
 # Rationale for the sed below: the following for breaks words at spaces (unless
