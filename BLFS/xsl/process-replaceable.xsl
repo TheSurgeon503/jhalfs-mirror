@@ -123,6 +123,11 @@
       <xsl:when test="string()='&lt;loginname&gt;'">
         <xsl:text>$USER</xsl:text>
       </xsl:when>
+<!-- for xorg environment. Note that libreoffice too uses &lt;PREFIX&gt; -->
+      <xsl:when test="string()='&lt;PREFIX&gt;' and
+                      ancestor::sect1[@id='xorg-env']">
+        <xsl:text>/usr</xsl:text>
+      </xsl:when>
       <xsl:otherwise>
         <xsl:text>**EDITME</xsl:text>
         <xsl:apply-templates/>
