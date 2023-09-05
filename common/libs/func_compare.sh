@@ -22,9 +22,11 @@ wrt_compare_targets() {            #
   local dir
   printf -v dir chapter%02d "$1"
 
-  sed -i '/userdel/d' $dir/*revised*
+  REVISED=cleanup
+  if ls $dir/*revised* 2>/dev/null; then REVISED=revised; fi
+  sed -i '/userdel/d' $dir/*$REVISED*
   for (( N = 2; N < ITERATIONS; N++ )); do
-     sed -i '/userdel/d' $dir-build_$N/*revised*
+     sed -i '/userdel/d' $dir-build_$N/*$REVISED*
   done
 
 }
