@@ -415,6 +415,8 @@ echo -e "\n\nTotalseconds: $SECONDS\n"
         <xsl:text>make mrproper&#xA;</xsl:text>
         <xsl:if test="ancestor::sect1[@id='ch-bootable-kernel']">
           <xsl:text>cp -v ../kernel-config .config&#xA;</xsl:text>
+          <xsl:text>timeout 60 make oldconfig ||\&#xA;</xsl:text>
+          <xsl:text>{ echo kernel config is not up to date; exit 124; }&#xA;</xsl:text>
         </xsl:if>
       </xsl:when>
 <!-- test instructions -->
