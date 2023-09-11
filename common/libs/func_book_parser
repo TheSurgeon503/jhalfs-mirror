@@ -63,6 +63,13 @@ extract_commands() {         #
   fi
   popd > /dev/null
 
+  JOBS_1=1
+  JOBS_2=1
+  case "$OPTIMIZE" in
+    "1") JOBS_2="$N_PARALLEL";;
+    "2") JOBS_1="$N_PARALLEL"; JOBS_2="$N_PARALLEL";;
+  esac
+
   # First profile the book, for revision and arch. Note that
   # MULTIBLIB is set to "default" if pure 64 bit book. In this case,
   # profiling on arch is useless, but does not hurt either.
@@ -102,6 +109,8 @@ extract_commands() {         #
            --stringparam local          "$LOCAL"        \
            --stringparam log-level      "$LOG_LEVEL"    \
            --stringparam script-root    "$SCRIPT_ROOT"  \
+           --stringparam jobs_1         "$JOBS_1"       \
+           --stringparam jobs_2         "$JOBS_2"       \
            --output "./${COMMANDS}/"                    \
            $XSL                                         \
            prbook.xml >> $LOGDIR/$LOG 2>&1
@@ -141,7 +150,8 @@ create_chroot_scripts() {    #
   if [ ! -z $ARCH ] ; then echo -n " $ARCH" ; fi
   echo -n "... "
   xsltproc --nonet --xinclude \
-           -o chroot-scripts/ chroot.xsl \
+           --stringparam jobs_2 "$JOBS_2" \
+           -o chroot-scripts/ chroot.xsl  \
            $BOOK/chapter0?/*chroot*.xml >> $LOGDIR/$LOG 2>&1
   echo "done"
 

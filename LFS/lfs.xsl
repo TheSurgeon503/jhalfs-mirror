@@ -28,6 +28,10 @@
   -->
   <xsl:param name="testsuite" select="1"/>
 
+  <!-- Parallelism (LFS >= 12.1) -->
+  <xsl:param name="jobs_1" select="1"/>
+  <xsl:param name="jobs_2" select="1"/>
+
   <!-- Install non wide character ncurses 5? -->
   <xsl:param name="ncurses5" select="'n'"/>
 
@@ -615,6 +619,12 @@ unset OLD_PKGDIR
       <xsl:when test="contains(string(.),'&lt;lfs&gt;')">
         <xsl:value-of select="$hostname"/>
       </xsl:when>
+      <xsl:when test="contains(string(.),'$(nproc || echo 1)')">
+        <xsl:value-of select="$jobs_1"/>
+      </xsl:when>
+      <xsl:when test="contains(string(.),'$(nproc)')">
+        <xsl:value-of select="$jobs_2"/>
+      </xsl:when>
       <xsl:otherwise>
         <xsl:text>**EDITME</xsl:text>
         <xsl:apply-templates/>
@@ -1080,6 +1090,14 @@ LOGLEVEL="</xsl:text>
     <xsl:param name="instructions" select="''"/>
     <xsl:param name="eof-seen" select="false()"/>
     <xsl:choose>
+      <xsl:when test="contains($instructions, '$(nproc)')">
+        <xsl:call-template name="comment-test">
+          <xsl:with-param
+            name="instructions"
+            select="concat(substring-before($instructions, '$(nproc)'), $jobs_2, substring-after($instructions, '$(nproc)'))"/>
+          <xsl:with-param name="eof-seen" select="$eof-seen"/>
+        </xsl:call-template>
+      </xsl:when>
       <xsl:when test="contains($instructions,'&#xA;')">
         <xsl:call-template name="comment-test">
           <xsl:with-param name="instructions"
