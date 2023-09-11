@@ -1,3 +1,11 @@
+# Check for "nproc" presence:
+config HAVE_NPROC
+    def_bool $(shell,if nproc &>/dev/null; then echo y; else echo n; fi)
+
+# Check for "cpuset controller in cgroup v2" presence:
+config HAVE_CGROUP
+    def_bool $(shell,if grep -q cpuset /sys/fs/cgroup/cgroup.controllers 2>/dev/null; then echo y; else echo n; fi)
+
 menu "BOOK Settings"
 
     #--- BOOK/script
@@ -811,7 +819,7 @@ depends on !BOOK_BLFS
 
     #--- Optimizations
     config    CONFIG_OPTIMIZE
-        bool    "Optimization and parallelization"
+        bool    "Optimization"
         default    n
         help
             #   Opens a menu for various optimization settings:
@@ -821,15 +829,8 @@ depends on !BOOK_BLFS
             # WARNING: The use of build optimizations may lead to build issues.
             #   If the system doesn't work as expected, please rebuild
             #   without optimizations before asking for support.
-    menu    "Parallelization and Optimization settings"
+    menu    "Optimization settings"
         depends on CONFIG_OPTIMIZE
-
-    config    N_PARALLEL
-        int "Number of parallel `make' jobs"
-        default 1
-        help
-            #-- The usual recommandation is (number of CPU cores)+1
-            #   Do not set for meaningful SBU calculations.
 
     choice
         prompt "Optimization level"
@@ -845,14 +846,6 @@ depends on !BOOK_BLFS
 
     endchoice
 
-    config    REALSBU
-        bool    "Build Binutls pass1 without optimization (Real SBU)"
-        depends on OPT_2
-        default    n
-        help
-           #-- Use -j1 in make invokation for Binutils pass1 to
-           #   get a valid SBU value.
-
     endmenu # Optimization settings
     config    OPTIMIZE
         int
@@ -861,6 +854,61 @@ depends on !BOOK_BLFS
         default    "2"    if OPT_2
 
     #--- End Optimizations
+    #--- Parallelism
+    menu "Parallelism settings"
+    if HAVE_NPROC
+        config ALL_CORES
+        bool "Use all cores as in the book"
+        default y
+        help
+              Use book instructions as written for parallelism. If you
+              answer no, then jhalfs will fall back to a static number of
+              cores, defined below. If you answer y, and your system
+              supports it, you'll be asked for a cpu set to use.
+
+        if HAVE_CGROUP
+            config CPUSET
+            string "set of cpus to use, or 'all' for all cpus"
+            default "all"
+            help
+                 See "List format" in cpuset(7). Choosing cpus depend
+                 on the topology of your processors. Sometimes two
+                 hyperthreads on the same core are numbered consecutively.
+                 For example for using all cores and no hyperthreading on
+                 a Haswell, use "0,2,4,6". Other brands may have a different
+                 topology, and may require e.g. "0-3" to use the first 4 cores.
+                 If not sure, keep the default.
+        endif
+        if !HAVE_CGROUP
+            config CPUSET
+            string
+            default "all"
+        endif
+
+    endif # HAVE_NPROC
+    if !HAVE_NPROC
+        config ALL_CORES
+        bool
+        default n
+    endif
+
+    config    N_PARALLEL
+        int "Number of parallel `make' jobs"
+        depends on !ALL_CORES
+        default 1
+        help
+            #-- The usual recommandation is (number of CPU cores)+1
+            #   Do not set for meaningful SBU calculations.
+
+    config    REALSBU
+        bool    "Build Binutls pass1 without parallelism (Real SBU)"
+        depends on ALL_CORES != 1
+        default    n
+        help
+           #-- Use -j1 in make invokation for Binutils pass1 to
+           #   get a valid SBU value.
+    endmenu # parallelism
+
 
     #-- Internal Settings
     menu "Internal Settings (WARNING: for jhalfs developers only)"
