@@ -437,11 +437,11 @@ fi
     cat << EOF
 
 chroot1: devices
-	sudo \$(CHROOT1)
+	-sudo \$(CHROOT1)
 	\$(MAKE) teardown
 
 chroot: devices
-	sudo \$(CHROOT1)
+	-sudo \$(CHROOT1)
 	\$(MAKE) teardown
 
 SETUP:        $SETUP_TGT
