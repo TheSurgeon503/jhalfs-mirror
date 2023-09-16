@@ -80,6 +80,9 @@ done</xsl:variable>
 <!-- include the template for replaceable tags -->
   <xsl:include href="process-replaceable.xsl"/>
 
+<!-- include the template for prompt tags -->
+  <xsl:include href="process-prompt.xsl"/>
+
 <!--=================== Begin processing ========================-->
 
   <xsl:template match="/">
@@ -385,8 +388,21 @@ echo Start Time: ${SECONDS} >> $INFOLOG
 
       <xsl:when test="@role = 'configuration'">
         <xsl:text>&#xA;</xsl:text>
-        <xsl:apply-templates mode="config"
-             select=".//screen[not(@role = 'nodump') and ./userinput]"/>
+        <xsl:choose>
+          <xsl:when test=".//screen/userinput/prompt">
+            <xsl:call-template name="process-prompt">
+              <xsl:with-param
+                name="instructions"
+                select=".//screen[not(@role = 'nodump') and ./userinput]"/>
+              <xsl:with-param name="root-seen" select="false"/>
+              <xsl:with-param name="prompt-seen" select="false"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:apply-templates mode="config"
+                 select=".//screen[not(@role = 'nodump') and ./userinput]"/>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:when><!-- @role="configuration" -->
 
     </xsl:choose>
