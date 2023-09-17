@@ -604,6 +604,13 @@ menu "System configuration"
             #-- Fully qualified path to a kernel config file
             #   The config file will be copied to ${BUILD_DIR}/sources
             #   and renamed 'kernel-config'
+            #
+            #   Important: if the config file is out of date (missing
+            #   option), the kernel build will timeout instead of
+            #   waiting forever for an input. This will generate error
+            #   124. In this case, update your config file,
+            #   copy it to $BUILD_DIR/sources/kernel-config, and
+            #   restart the build.
     #--- End Kernel
 
     config    NCURSES5
