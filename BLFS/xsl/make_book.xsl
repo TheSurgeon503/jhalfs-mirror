@@ -57,15 +57,13 @@
 <!-- apply-templates for each item in the list.
      Normally, those items are id of nodes.
      Those nodes can be sect1 (normal case),
-     sect2 (python modules or DBus bindings)
-     bridgehead (perl modules)
-     para (dependency of perl modules).
+     sect2 (python/perl modules/dependencies )
      The templates after this one treat each of those cases.
      However, some items are xorg package names, and not id.
      We need special instructions in that case.
      The difficulty is that some of those names *are* id's,
      because they are referenced in the index.
-     Hopefully, none of those id's are sect{1,2}, bridgehead or para...-->
+     Hopefully, none of those id's are sect{1,2}...-->
   <xsl:template name="apply-list">
     <xsl:param name="list" select="''"/>
     <xsl:if test="string-length($list) &gt; 0">
@@ -100,7 +98,7 @@
               </xsl:call-template>
             </xsl:when>
             <xsl:when test="contains(concat($list,' '),'-pass1 ')">
-<!-- We need to do it only for sect1 and sect2, because of libva -->
+<!-- We need to do it for both sect1 and sect2, because of libva -->
               <xsl:variable
                    name="real-id"
                    select="substring-before(concat($list,' '),'-pass1 ')"/>
@@ -113,9 +111,11 @@
             </xsl:when>
             <xsl:when test="not(id($list)[self::sect1 or self::sect2 or self::para or self::bridgehead])">
               <xsl:apply-templates
-                   select="//sect1[contains(@id,'xorg7')
-                               and contains(string(.//userinput),
-                                            concat($list,'-'))]"
+                select="//sect1[(contains(@id,'xorg7') or
+                                 contains(@id,'frameworks') or
+                                 contains(@id,'plasma5'))
+                                 and .//userinput/literal[contains(string(),
+                                            concat($list,'-'))]]"
                    mode="xorg">
                 <xsl:with-param name="package" select="$list"/>
               </xsl:apply-templates>
@@ -497,6 +497,17 @@
      one -->
   <xsl:template match="sect1" mode="xorg">
     <xsl:param name="package"/>
+    <!--DEBUG
+    <xsl:message>
+      <xsl:text>Entering sect1 template in xorg mode:
+- page id:</xsl:text>
+      <xsl:value-of select="@id"/>
+      <xsl:text>
+- package:</xsl:text>
+      <xsl:value-of select="$package"/>
+      <xsl:text>
+</xsl:text>
+    </xsl:message> END DEBUG -->
     <xsl:variable name="tarball">
       <xsl:call-template name="tarball">
         <xsl:with-param name="package" select="concat(' ',$package,'-')"/>
@@ -521,7 +532,13 @@
     <xsl:variable name="install-instructions">
       <xsl:call-template name="inst-instr">
         <xsl:with-param name="inst-instr"
-                        select=".//userinput[starts-with(string(),'for ')]"/>
+          select=
+            "substring-after(
+               substring-after(.//userinput[starts-with(string(),'for ') or
+                                            starts-with(string(),'while ')],
+                               'pushd'),
+               '&#xA;')"/>
+        <xsl:with-param name="package" select="$package"/>
       </xsl:call-template>
     </xsl:variable>
     <xsl:element name="sect1">
@@ -540,20 +557,17 @@
                 <xsl:value-of
                    select=".//para[contains(string(),'(HTTP)')]/ulink/@url"/>
                 <xsl:value-of select="$download-dir"/>
+                <xsl:if test="contains(@id,'frameworks') or
+                              contains(@id,'plasma5')">
+                  <xsl:text>/</xsl:text>
+                </xsl:if>
                 <xsl:value-of select="$tarball"/>
               </xsl:attribute>
              </xsl:element>
             </para>
           </listitem>
           <listitem>
-            <para>Download (FTP): <xsl:element name="ulink">
-              <xsl:attribute name="url">
-                <xsl:value-of
-                   select=".//para[contains(string(),'(FTP)')]/ulink/@url"/>
-                <xsl:value-of select="$download-dir"/>
-                <xsl:value-of select="$tarball"/>
-              </xsl:attribute>
-             </xsl:element>
+            <para>Download (FTP): <ulink url=" "/>
             </para>
           </listitem>
           <listitem>
@@ -581,7 +595,9 @@
 
         <screen><userinput>packagedir=<xsl:value-of
                     select="substring-before($tarball,'.tar.')"/>
-          <xsl:text>&#xA;</xsl:text>
+          <xsl:text>
+     name=$(echo $pkg | sed 's/-[[:digit:]].*//')
+          </xsl:text>
           <xsl:value-of select="substring-before($install-instructions,
                                                  'as_root')"/>
         </userinput></screen>
@@ -680,14 +696,21 @@ END DEBUG -->
 
   <xsl:template name="inst-instr">
     <xsl:param name="inst-instr"/>
+    <xsl:param name="package"/>
     <xsl:choose>
-      <xsl:when test="contains($inst-instr,'pushd')">
-        <xsl:call-template name="inst-instr">
-          <xsl:with-param name="inst-instr"
-                          select="substring-after(
-                                   substring-after($inst-instr,'pushd'),
-                                   '&#xA;')"/>
-        </xsl:call-template>
+      <xsl:when test="contains(substring-after($inst-instr,'popd'),'popd')">
+        <xsl:choose>
+          <xsl:when test="$package='kapidox'">
+            <xsl:copy-of select="substring-after(substring-before($inst-instr,'popd'),'kapidox)')"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:copy-of select="substring-before($inst-instr,'kapidox)')"/>
+            <xsl:call-template name="inst-instr">
+              <xsl:with-param name="inst-instr"
+                              select="substring-after($inst-instr,';;')"/>
+            </xsl:call-template>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:when>
       <xsl:otherwise>
         <xsl:copy-of select="substring-before($inst-instr,'popd')"/>

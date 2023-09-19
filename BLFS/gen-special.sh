@@ -98,7 +98,9 @@ cat >tmpfile << EOF
     <xsl:param name="build"/>
     <xsl:choose>
 EOF
-for file in $(ls ${BLFS_DIR}/x/installing/x7* | grep -v x7driver); do
+for file in $(ls ${BLFS_DIR}/x/installing/x7* | grep -v x7driver) \
+	    ${BLFS_DIR}/kde/kf5/kf5-frameworks.xml                \
+	    ${BLFS_DIR}/kde/plasma5/plasma-all.xml; do
   id=$(grep xreflabel $file | sed 's@.*id="\([^"]*\).*@\1@')
   cat >>$SPECIAL_FILE << EOF
     <xsl:when test="@id='$id'">
@@ -116,26 +118,35 @@ EOF
 # So we have to read that command too, since it may be assumed
 # that the preceding package is a dependency of the following,
 # except the first.
-  list_cat="$(sed -n '/>cat/,/EOF</p' $file | grep -v 'cat\|EOF\|#' |
+list_cat="$(sed -n '/>cat.*\.\(md5\|dat\)/,/EOF</p' $file | grep -v 'cat\|EOF\|#' |
               awk '{ print $NF }' | sed 's/-&.*//')"
 
-# Rationale for the sed below: the following for breaks words at spaces (unless
-# we tweak IFS). So replace spaces with commas in lines so that only newlines
-# are separators.
-  for pack in \
-      $(grep 'ENTITY.*version' $file | sed 's/[ ]\+/,/g'); do
-    packname=$(echo $pack | sed s'@.*ENTITY,\(.*\)-version.*@\1@')
-    packversion=$(echo $pack | sed 's@[^"]*"\([^"]*\).*@\1@')
-    precpack=NONE
-    for i in $list_cat; do
-      if [ "$i" = "$packname" ]; then break; fi
-      precpack=$i
-    done
-# It may happen that packname is not in list_cat, because its entity
-# is commented out in the xml, but we do not check that (too complicated).
-# In that case, the whole list is scanned, and $precpack=$i at the end.
-# when packname is found in the list $precpack!=$i.
-    if [ "$precpack" = "$i" ]; then continue; fi
+  precpack=NONE
+  for pack in $list_cat; do
+    if grep -q x7 $file; then # this is an xorg package
+      packname=$pack
+      packversion=$(grep "ENTITY ${pack}-version" $file | \
+	            sed 's@[^"]*"\([^"]*\).*@\1@')
+    else
+      packname=${pack%%-[[:digit:]]*}
+      packversion=$(echo $pack | sed 's/[^.]*-\([.[:digit:]]*\)\.tar.*/\1/')
+    fi
+## Rationale for the sed below: the following for breaks words at spaces (unless
+## we tweak IFS). So replace spaces with commas in lines so that only newlines
+## are separators.
+#  for pack in \
+#      $(grep 'ENTITY.*version' $file | sed 's/[ ]\+/,/g'); do
+#    packname=$(echo $pack | sed s'@.*ENTITY,\(.*\)-version.*@\1@')
+#    packversion=$(echo $pack | sed 's@[^"]*"\([^"]*\).*@\1@')
+#    for i in $list_cat; do
+#      if [ "$i" = "$packname" ]; then break; fi
+#      precpack=$i
+#    done
+## It may happen that packname is not in list_cat, because its entity
+## is commented out in the xml, but we do not check that (too complicated).
+## In that case, the whole list is scanned, and $precpack=$i at the end.
+## when packname is found in the list $precpack!=$i.
+#    if [ "$precpack" = "$i" ]; then continue; fi
     cat >>$SPECIAL_FILE << EOF
         <module><xsl:text>&#xA;          </xsl:text>
           <xsl:element name="name">$packname</xsl:element>
@@ -182,6 +193,7 @@ EOF
           <xsl:attribute name="type">ref</xsl:attribute>
         </xsl:element>
 EOF
+    precpack=$packname
   done
   cat >>$SPECIAL_FILE << EOF
      </package>
