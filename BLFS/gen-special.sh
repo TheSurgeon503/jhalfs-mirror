@@ -87,10 +87,11 @@ for nv_id in $NV_LIST; do
 EOF
 done
 
-# Taking packages inside x7proto etc, as versionned modules.
+# Taking packages contained in pages installing several packages (x7* except
+# x7driver, kf5-frameworks, and plasma5-all), as versionned modules.
 # We also write a dependency expansion when a dep is of the form
-# xorg7-something. Since that is another template, we need
-# a temporary file, which we shall concatenate at the end
+# xorg7-something or kf5-frameworks or plasma5-build. Since that is another
+# template, we need a temporary file, which we shall concatenate at the end
 cat >tmpfile << EOF
   <xsl:template name="expand-deps">
     <xsl:param name="section"/>
@@ -112,41 +113,31 @@ EOF
   cat >> tmpfile << EOF
       <xsl:when test="\$section='$id'">
 EOF
-# We extract the list of packages for an xorg page from
-# the version part of the .xml file. Seems that
-# the order is not always the same as in the "cat" command.
-# So we have to read that command too, since it may be assumed
+# We extract the list of packages for those pages from
+# the "cat" command that creates the md5 file. We assume
 # that the preceding package is a dependency of the following,
 # except the first.
-list_cat="$(sed -n '/>cat.*\.\(md5\|dat\)/,/EOF</p' $file | grep -v 'cat\|EOF\|#' |
-              awk '{ print $NF }' | sed 's/-&.*//')"
+# note that some pages may have several "cat" command, so we have to
+# make a complex regex for the first line to save. All those lines have
+# .md5 in them except the one for x7legacy that has .dat.
+# we need also to remove lines beginning with #.
+# Note that only xorg pages have '&' in them. So for kde
+# pages, what is extracted it the full tarball name.
+list_cat="$(sed -n '/>cat.*\.\(md5\|dat\)/,/EOF</p' $file | \
+            grep -v 'cat\|EOF\|#' | \
+            awk '{ print $NF }' | sed 's/-&.*//')"
 
   precpack=NONE
   for pack in $list_cat; do
     if grep -q x7 $file; then # this is an xorg package
       packname=$pack
+# We extract the version from the ENTITY parts of the .xml file.
       packversion=$(grep "ENTITY ${pack}-version" $file | \
 	            sed 's@[^"]*"\([^"]*\).*@\1@')
     else
-      packname=${pack%%-[[:digit:]]*}
+      packname=${pack%-[[:digit:]]*}
       packversion=$(echo $pack | sed 's/[^.]*-\([.[:digit:]]*\)\.tar.*/\1/')
     fi
-## Rationale for the sed below: the following for breaks words at spaces (unless
-## we tweak IFS). So replace spaces with commas in lines so that only newlines
-## are separators.
-#  for pack in \
-#      $(grep 'ENTITY.*version' $file | sed 's/[ ]\+/,/g'); do
-#    packname=$(echo $pack | sed s'@.*ENTITY,\(.*\)-version.*@\1@')
-#    packversion=$(echo $pack | sed 's@[^"]*"\([^"]*\).*@\1@')
-#    for i in $list_cat; do
-#      if [ "$i" = "$packname" ]; then break; fi
-#      precpack=$i
-#    done
-## It may happen that packname is not in list_cat, because its entity
-## is commented out in the xml, but we do not check that (too complicated).
-## In that case, the whole list is scanned, and $precpack=$i at the end.
-## when packname is found in the list $precpack!=$i.
-#    if [ "$precpack" = "$i" ]; then continue; fi
     cat >>$SPECIAL_FILE << EOF
         <module><xsl:text>&#xA;          </xsl:text>
           <xsl:element name="name">$packname</xsl:element>
