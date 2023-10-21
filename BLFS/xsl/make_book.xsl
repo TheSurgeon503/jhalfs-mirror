@@ -511,104 +511,119 @@
                         select="string(.//userinput[starts-with(string(),'cat ')])"/>
       </xsl:call-template>
     </xsl:variable>
-    <xsl:variable name="md5sum">
-      <xsl:call-template name="md5sum">
-        <xsl:with-param name="package" select="concat(' ',$package,'-')"/>
-        <xsl:with-param name="cat-md5"
-                        select=".//userinput[starts-with(string(),'cat ')]"/>
-      </xsl:call-template>
-    </xsl:variable>
-    <xsl:variable name="download-dir">
-      <xsl:call-template name="download-dir">
-        <xsl:with-param name="package" select="concat(' ',$package,'-')"/>
-        <xsl:with-param name="cat-md5"
-                        select=".//userinput[starts-with(string(),'cat ')]"/>
-      </xsl:call-template>
-    </xsl:variable>
-    <xsl:variable name="install-instructions">
-      <xsl:call-template name="inst-instr">
-        <xsl:with-param name="inst-instr"
-          select=
-            "substring-after(
-               substring-after(.//userinput[starts-with(string(),'for ') or
-                                            starts-with(string(),'while ')],
-                               'pushd'),
-               '&#xA;')"/>
-        <xsl:with-param name="package" select="$package"/>
-      </xsl:call-template>
-    </xsl:variable>
-    <xsl:element name="sect1">
-      <xsl:attribute name="id"><xsl:value-of select="$package"/></xsl:attribute>
-      <xsl:processing-instruction name="dbhtml">
-         filename="<xsl:value-of select='$package'/>.html"
-      </xsl:processing-instruction>
-      <title><xsl:value-of select="$package"/></title>
-      <sect2 role="package">
-        <title>Introduction to <xsl:value-of select="$package"/></title>
-        <bridgehead renderas="sect3">Package Information</bridgehead>
-        <itemizedlist spacing="compact">
-          <listitem>
-            <para>Download (HTTP): <xsl:element name="ulink">
-              <xsl:attribute name="url">
-                <xsl:value-of
-                   select=".//para[contains(string(),'(HTTP)')]/ulink/@url"/>
-                <xsl:value-of select="$download-dir"/>
-                <xsl:if test="contains(@id,'frameworks') or
-                              contains(@id,'plasma5')">
-                  <xsl:text>/</xsl:text>
-                </xsl:if>
-                <xsl:value-of select="$tarball"/>
-              </xsl:attribute>
-             </xsl:element>
-            </para>
-          </listitem>
-          <listitem>
-            <para>Download (FTP): <ulink url=" "/>
-            </para>
-          </listitem>
-          <listitem>
-            <para>
-              Download MD5 sum: <xsl:value-of select="$md5sum"/>
-            </para>
-          </listitem>
-        </itemizedlist>
-        <!-- If there is an additional download, we need to output that -->
-        <xsl:if test=".//bridgehead[contains(string(),'Additional')]">
-          <xsl:copy-of
-                 select=".//bridgehead[contains(string(),'Additional')]"/>
-          <xsl:copy-of
-                 select=".//bridgehead[contains(string(),'Additional')]
-                         /following-sibling::itemizedlist[1]"/>
-        </xsl:if>
-      </sect2>
-      <sect2 role="installation">
-        <title>Installation of <xsl:value-of select="$package"/></title>
+    <!-- Unfortunately, there are packages in kf5 and plasma5 that
+         starts in the same way: for example kwallet in kf5
+         and kwallet-pam in plasma. So we may arrive here with
+         package=kwallet and tarball=kwallet-pam-(version).tar.xz.
+         We should not continue in this case. For checking, transform
+         digits into X, and check that package-X occurs in tarball.-->
+    <xsl:if test="contains(translate($tarball,'0123456789','XXXXXXXXXX'),
+                           concat($package,'-X'))">
+      <xsl:variable name="md5sum">
+        <xsl:call-template name="md5sum">
+          <xsl:with-param name="package" select="concat(' ',$package,'-')"/>
+          <xsl:with-param name="cat-md5"
+                          select=".//userinput[starts-with(string(),'cat ')]"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="download-dir">
+        <xsl:call-template name="download-dir">
+          <xsl:with-param name="package" select="concat(' ',$package,'-')"/>
+          <xsl:with-param name="cat-md5"
+                          select=".//userinput[starts-with(string(),'cat ')]"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="install-instructions">
+        <xsl:call-template name="inst-instr">
+          <xsl:with-param name="inst-instr"
+            select=
+              "substring-after(
+                 substring-after(.//userinput[starts-with(string(),'for ') or
+                                              starts-with(string(),'while ')],
+                                 'pushd'),
+                 '&#xA;')"/>
+          <xsl:with-param name="package" select="$package"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:element name="sect1">
+        <xsl:attribute name="id">
+          <xsl:value-of select="$package"/>
+        </xsl:attribute>
+        <xsl:processing-instruction name="dbhtml">
+           filename="<xsl:value-of select='$package'/>.html"
+        </xsl:processing-instruction>
+        <title><xsl:value-of select="$package"/></title>
+        <sect2 role="package">
+          <title>Introduction to <xsl:value-of select="$package"/></title>
+          <bridgehead renderas="sect3">Package Information</bridgehead>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para>Download (HTTP): <xsl:element name="ulink">
+                <xsl:attribute name="url">
+                  <xsl:value-of
+                     select=".//para[contains(string(),'(HTTP)')]/ulink/@url"/>
+                  <xsl:value-of select="$download-dir"/>
+                  <!-- $download-dir contains the trailing / for xorg,
+                       but not for KDE... -->
+                  <xsl:if test="contains(@id,'frameworks') or
+                                contains(@id,'plasma5')">
+                    <xsl:text>/</xsl:text>
+                  </xsl:if>
+                  <xsl:value-of select="$tarball"/>
+                </xsl:attribute>
+               </xsl:element>
+              </para>
+            </listitem>
+            <!-- don't use FTP, although they are available for xorg -->
+            <listitem>
+              <para>Download (FTP): <ulink url=" "/>
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Download MD5 sum: <xsl:value-of select="$md5sum"/>
+              </para>
+            </listitem>
+          </itemizedlist>
+          <!-- If there is an additional download, we need to output that -->
+          <xsl:if test=".//bridgehead[contains(string(),'Additional')]">
+            <xsl:copy-of
+                   select=".//bridgehead[contains(string(),'Additional')]"/>
+            <xsl:copy-of
+                   select=".//bridgehead[contains(string(),'Additional')]
+                           /following-sibling::itemizedlist[1]"/>
+          </xsl:if>
+        </sect2>
+        <sect2 role="installation">
+          <title>Installation of <xsl:value-of select="$package"/></title>
 
-        <para>
-          Install <application><xsl:value-of select="$package"/></application>
-          by running the following commands:
-        </para>
+          <para>
+            Install <application><xsl:value-of select="$package"/></application>
+            by running the following commands:
+          </para>
+          <!-- packagedir is used in xorg lib instructions -->
+          <screen><userinput>packagedir=<xsl:value-of
+                      select="substring-before($tarball,'.tar.')"/>
+           <!-- name is used in kf5 instructions -->
+            <xsl:text>
+name=$(echo $packagedir | sed 's/-[[:digit:]].*//')
+</xsl:text>
+            <xsl:value-of select="substring-before($install-instructions,
+                                                   'as_root')"/>
+          </userinput></screen>
 
-        <screen><userinput>packagedir=<xsl:value-of
-                    select="substring-before($tarball,'.tar.')"/>
-          <xsl:text>
-     name=$(echo $pkg | sed 's/-[[:digit:]].*//')
-          </xsl:text>
-          <xsl:value-of select="substring-before($install-instructions,
-                                                 'as_root')"/>
-        </userinput></screen>
-
-        <para>
-          Now as the <systemitem class="username">root</systemitem> user:
-        </para>
-        <screen role='root'>
-          <userinput><xsl:value-of select="substring-after(
-                                                 $install-instructions,
-                                                 'as_root')"/>
-          </userinput>
-        </screen>
-      </sect2>
-    </xsl:element><!-- sect1 -->
+          <para>
+            Now as the <systemitem class="username">root</systemitem> user:
+          </para>
+          <screen role='root'>
+            <userinput><xsl:value-of select="substring-after(
+                                                   $install-instructions,
+                                                   'as_root')"/>
+            </userinput>
+          </screen>
+        </sect2>
+      </xsl:element><!-- sect1 -->
+    </xsl:if>
 
   </xsl:template>
 
