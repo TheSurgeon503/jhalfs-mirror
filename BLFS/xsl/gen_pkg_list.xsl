@@ -358,7 +358,7 @@
         <xsl:when test="ancestor::*[@id=current()/@linkend]"/>
 <!-- do not depend on something which is not a dependency -->
         <xsl:when test="@role='nodep'"/>
-<!-- Call list expansion when we have an xorg7 series of packages -->
+<!-- Call list expansion when we have a compound package -->
         <xsl:when test="contains(@linkend,'xorg7-') or
                         @linkend='kf5-frameworks' or
                         @linkend='plasma5-build'">

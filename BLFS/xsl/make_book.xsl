@@ -59,7 +59,8 @@
      Those nodes can be sect1 (normal case),
      sect2 (python/perl modules/dependencies )
      The templates after this one treat each of those cases.
-     However, some items are xorg package names, and not id.
+     However, some items are sub-packages of compound packages (xorg7-*,
+     kf5, plasma), and not id.
      We need special instructions in that case.
      The difficulty is that some of those names *are* id's,
      because they are referenced in the index.
@@ -68,6 +69,7 @@
     <xsl:param name="list" select="''"/>
     <xsl:if test="string-length($list) &gt; 0">
       <xsl:choose>
+        <!-- iterate if there are several packages in list -->
         <xsl:when test="contains($list,' ')">
           <xsl:call-template name="apply-list">
             <xsl:with-param name="list"
@@ -78,6 +80,8 @@
                             select="substring-after($list,' ')"/>
           </xsl:call-template>
         </xsl:when>
+        <!-- From now on, $list contains only one package -->
+        <!-- If it is a group, do nothing -->
         <xsl:when test="contains($list,'groupxx')"/>
         <xsl:otherwise>
           <xsl:variable name="is-lfs">
@@ -88,6 +92,7 @@
           </xsl:variable>
           <xsl:choose>
             <xsl:when test="$is-lfs='true'">
+            <!-- LFS package -->
               <xsl:message>
                 <xsl:value-of select="$list"/>
                 <xsl:text> is an lfs package</xsl:text>
@@ -109,14 +114,16 @@
                 <xsl:apply-templates select="id($real-id)" mode="pass1-sect2"/>
               </xsl:if>
             </xsl:when>
-            <xsl:when test="not(id($list)[self::sect1 or self::sect2 or self::para or self::bridgehead])">
+            <xsl:when test="not(id($list)[self::sect1 or self::sect2])">
+              <!-- This is a sub-package: parse the corresponding compound
+                   package-->
               <xsl:apply-templates
                 select="//sect1[(contains(@id,'xorg7') or
                                  contains(@id,'frameworks') or
                                  contains(@id,'plasma5'))
                                  and .//userinput/literal[contains(string(),
                                             concat($list,'-'))]]"
-                   mode="xorg">
+                   mode="compound">
                 <xsl:with-param name="package" select="$list"/>
               </xsl:apply-templates>
             </xsl:when>
@@ -495,19 +502,8 @@
 <!-- we have got an xorg package. We are at the installation page
      but now we need to make an autonomous page from the global
      one -->
-  <xsl:template match="sect1" mode="xorg">
+  <xsl:template match="sect1" mode="compound">
     <xsl:param name="package"/>
-    <!--DEBUG
-    <xsl:message>
-      <xsl:text>Entering sect1 template in xorg mode:
-- page id:</xsl:text>
-      <xsl:value-of select="@id"/>
-      <xsl:text>
-- package:</xsl:text>
-      <xsl:value-of select="$package"/>
-      <xsl:text>
-</xsl:text>
-    </xsl:message> END DEBUG -->
     <xsl:variable name="tarball">
       <xsl:call-template name="tarball">
         <xsl:with-param name="package" select="concat(' ',$package,'-')"/>
@@ -618,16 +614,14 @@
 
 <!-- get the tarball name from the text that comes from the .md5 file -->
   <xsl:template name="tarball">
+    <!-- $package must start with a space, and finish with a "-", to be
+         sure to match exactly the package. Note that if we have two
+         packages named e.g. "pkg1" and "pkg1-add", the second one may be
+         matched by " pkg1-". So this only works if "pkg1" comes before
+         "pkg1-add" in the md5 file. Presently this is the case in the book...
+    -->
     <xsl:param name="package"/>
     <xsl:param name="cat-md5"/>
-<!-- DEBUG
-<xsl:message><xsl:text>Entering "tarball" template:
-  package is: </xsl:text>
-<xsl:value-of select="$package"/><xsl:text>
-  cat-md5 is: </xsl:text>
-<xsl:value-of select="$cat-md5"/>
-</xsl:message>
-END DEBUG -->
     <xsl:choose>
       <xsl:when test="contains(substring-before($cat-md5,$package),'&#xA;')">
         <xsl:call-template name="tarball">
