@@ -704,24 +704,36 @@ name=$(echo $packagedir | sed 's/-[[:digit:]].*//')
   </xsl:template>
 
   <xsl:template name="inst-instr">
+    <!-- This template is necessary because of the "kapidox" case in kf5:
+         Normally, the general instructions extract the package and change
+         to the extracted dir for running the installation instructions.
+         When installing a sub-package of a compound package, the installation
+         instructions to be run are located between a pushd and a popd,
+         *except* for kf5, where a popd occurs inside a case for kapidox...
+         So we call this template with a "inst-instr" string that contains
+         everything after the pushd.-->
     <xsl:param name="inst-instr"/>
     <xsl:param name="package"/>
     <xsl:choose>
+      <!-- first the case of kf5: there are two "popd"-->
       <xsl:when test="contains(substring-after($inst-instr,'popd'),'popd')">
         <xsl:choose>
           <xsl:when test="$package='kapidox'">
+            <!-- only the instructions inside the "case" and before popd -->
             <xsl:copy-of select="substring-after(substring-before($inst-instr,'popd'),'kapidox)')"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:copy-of select="substring-before($inst-instr,'kapidox)')"/>
+            <!-- all what is after the esac -->
             <xsl:call-template name="inst-instr">
-              <xsl:with-param name="inst-instr"
-                              select="substring-after($inst-instr,';;')"/>
+              <xsl:with-param
+                name="inst-instr"
+                select="substring-after($inst-instr,'esac&#xA;')"/>
             </xsl:call-template>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:when>
       <xsl:otherwise>
+        <!-- normal case: everything that is before popd -->
         <xsl:copy-of select="substring-before($inst-instr,'popd')"/>
       </xsl:otherwise>
     </xsl:choose>
