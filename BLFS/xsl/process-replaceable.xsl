@@ -124,13 +124,13 @@
       </xsl:when>
 <!-- in this case, even root can be used -->
       <xsl:when test="string()='&lt;loginname&gt;'">
-        <xsl:text>$USER</xsl:text>
         <xsl:if test="contains(preceding-sibling::text()[1],'-policy')">
-          <xsl:text> -pw mypw</xsl:text>
+          <xsl:text>-pw lupw </xsl:text>
         </xsl:if>
+        <xsl:text>$USER</xsl:text>
         <xsl:if test="contains(preceding-sibling::text()[1],'kinit')">
           <xsl:text> &lt;&lt; PASS_EOF
-mypw
+lupw
 PASS_EOF
 </xsl:text>
         </xsl:if>
