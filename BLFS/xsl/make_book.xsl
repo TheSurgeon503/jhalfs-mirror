@@ -516,9 +516,11 @@
          and kwallet-pam in plasma. So we may arrive here with
          package=kwallet and tarball=kwallet-pam-(version).tar.xz.
          We should not continue in this case. For checking, transform
-         digits into X, and check that package-X occurs in tarball.-->
-    <xsl:if test="contains(translate($tarball,'0123456789','XXXXXXXXXX'),
-                           concat($package,'-X'))">
+         digits into X, and check that package-X occurs in tarball. We
+         have to translate package too, since it may contain digits.-->
+    <xsl:if test=
+        "contains(translate($tarball,'0123456789','XXXXXXXXXX'),
+                  concat(translate($package,'0123456789','XXXXXXXXXX'),'-X'))">
       <xsl:variable name="md5sum">
         <xsl:call-template name="md5sum">
           <xsl:with-param name="package" select="concat(' ',$package,'-')"/>
