@@ -124,7 +124,7 @@ EOF
 # Note that only xorg pages have '&' in them. So for kde
 # pages, what is extracted it the full tarball name.
 list_cat="$(sed -n '/>cat.*\.\(md5\|dat\)/,/EOF</p' $file | \
-            grep -v 'cat\|EOF\|#' | \
+            grep -v '>cat\|EOF<\|#' | \
             awk '{ print $NF }' | sed 's/-&.*//')"
 
   precpack=NONE
