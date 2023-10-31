@@ -569,6 +569,18 @@
                                 contains(@id,'plasma5')">
                     <xsl:text>/</xsl:text>
                   </xsl:if>
+                  <!-- Some kf5 packages are in a subdirectory -->
+                  <xsl:if test="$package='khtml' or
+                                $package='kdelibs4support' or
+                                $package='kdesignerplugin' or
+                                $package='kdewebkit' or
+                                $package='kjs' or
+                                $package='kjsembed' or
+                                $package='kmediaplayer' or
+                                $package='kross' or
+                                $package='kxmlrpcclient'">
+                    <xsl:text>portingAids/</xsl:text>
+                  </xsl:if>
                   <xsl:value-of select="$tarball"/>
                 </xsl:attribute>
                </xsl:element>
