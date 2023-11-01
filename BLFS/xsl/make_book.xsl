@@ -64,7 +64,9 @@
      We need special instructions in that case.
      The difficulty is that some of those names *are* id's,
      because they are referenced in the index.
-     Hopefully, none of those id's are sect{1,2}...-->
+     Hopefully, none of those id's are sect{1,2}...
+     We also need a special template for plasma-post-install,
+     because this one is not an id at all!-->
   <xsl:template name="apply-list">
     <xsl:param name="list" select="''"/>
     <xsl:if test="string-length($list) &gt; 0">
@@ -114,6 +116,11 @@
                 <xsl:apply-templates select="id($real-id)" mode="pass1-sect2"/>
               </xsl:if>
             </xsl:when>
+            <xsl:when test="$list='plasma-post-install'">
+              <xsl:apply-templates
+                select="//sect1[@id='plasma5-build']"
+                mode="plasma-post-install"/>
+            </xsl:when>
             <xsl:when test="not(id($list)[self::sect1 or self::sect2])">
               <!-- This is a sub-package: parse the corresponding compound
                    package-->
@@ -123,7 +130,7 @@
                                  contains(@id,'plasma5'))
                                  and .//userinput/literal[contains(string(),
                                             concat($list,'-'))]]"
-                   mode="compound">
+                 mode="compound">
                 <xsl:with-param name="package" select="$list"/>
               </xsl:apply-templates>
             </xsl:when>
@@ -752,4 +759,58 @@ name=$(echo $packagedir | sed 's/-[[:digit:]].*//')
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+
+  <xsl:template match="sect1" mode="plasma-post-install">
+    <xsl:variable name="package" select="'plasma-post-install'"/>
+    <xsl:element name="sect1">
+      <xsl:attribute name="id">
+        <xsl:value-of select="$package"/>
+      </xsl:attribute>
+      <xsl:processing-instruction name="dbhtml">
+         filename="<xsl:value-of select='$package'/>.html"
+      </xsl:processing-instruction>
+      <title><xsl:value-of select="$package"/></title>
+      <sect2 role="installation">
+        <title>Installation of <xsl:value-of select="$package"/></title>
+
+        <para>
+          Install <application><xsl:value-of select="$package"/></application>
+          by running the following commands:
+        </para>
+        <screen role="root">
+          <userinput>
+            <xsl:call-template name="plasma-sessions">
+              <xsl:with-param
+                name="p-sessions-text"
+                select="string(.//userinput[contains(text(),'xsessions')])"/>
+            </xsl:call-template>
+          </userinput>
+        </screen>
+        <xsl:copy-of select=".//screen[@role='root']"/>
+      </sect2>
+    </xsl:element><!-- sect1 -->
+  </xsl:template>
+
+  <xsl:template name="plasma-sessions">
+    <xsl:param name="p-sessions-text"/>
+    <xsl:choose>
+      <xsl:when test="string-length($p-sessions-text)=0"/>
+      <xsl:when test="contains($p-sessions-text,'as_root')">
+        <xsl:call-template name="plasma-sessions">
+          <xsl:with-param
+            name="p-sessions-text"
+            select="substring-before($p-sessions-text,'as_root')"/>
+        </xsl:call-template>
+        <xsl:call-template name="plasma-sessions">
+          <xsl:with-param
+            name="p-sessions-text"
+            select="substring-after($p-sessions-text,'as_root ')"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:copy-of select="$p-sessions-text"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
 </xsl:stylesheet>

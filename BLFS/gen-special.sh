@@ -194,6 +194,31 @@ EOF
 #EOF
     precpack=$packname
   done
+# We need a dummy package for plasma post install instructions
+  if [ $(basename $file .xml) = plasma-all ]; then
+    cat >>$SPECIAL_FILE << EOF
+        <module><xsl:text>&#xA;          </xsl:text>
+          <xsl:element name="name">plasma-post-install</xsl:element>
+          <xsl:element name="version">1.0.0</xsl:element>
+          <xsl:if test="document(\$installed-packages)//package[name='$packname']">
+            <xsl:element name="inst-version">
+              <xsl:value-of
+                select="document(\$installed-packages
+                                )//package[name='$packname']/version"/>
+            </xsl:element>
+          </xsl:if>
+<!-- Dependencies -->
+          <xsl:element name="dependency">
+            <xsl:attribute name="status">required</xsl:attribute>
+            <xsl:attribute name="build">before</xsl:attribute>
+            <xsl:attribute name="name">$precpack</xsl:attribute>
+            <xsl:attribute name="type">ref</xsl:attribute>
+          </xsl:element>
+<!-- End dependencies -->
+        </module>
+EOF
+  fi
+
   cat >>$SPECIAL_FILE << EOF
      </package>
    </xsl:when>
