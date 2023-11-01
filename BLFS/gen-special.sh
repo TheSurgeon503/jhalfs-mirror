@@ -59,13 +59,21 @@ EOF
 
 # Non-versionned packages. Add to NV_LIST if you need more.
 for nv_id in $NV_LIST; do
+# Actually, kf5-intro contains some version info, so should be
+# versioned. For other packages, we define version to 1.0.0
+# because the DTD needs a version tag.
+  DUM_VER=1.0.0
+  if [ $nv_id = kf5-intro ]; then
+    DUM_VER=$(grep kf5-version $BLFS_DIR/packages.ent | \
+              sed 's/.*"\([^"]*\).*/\1/')
+  fi
   cat >>$SPECIAL_FILE << EOF
     <xsl:when test="@id='$nv_id'">
       <xsl:text>      </xsl:text>
       <package><xsl:text>&#xA;        </xsl:text>
         <xsl:element name="name">$nv_id</xsl:element>
         <xsl:text>&#xA;        </xsl:text>
-        <xsl:element name="version">1.0.0</xsl:element>
+        <xsl:element name="version">$DUM_VER</xsl:element>
         <xsl:if
             test="document(\$installed-packages)//package[name=current()/@id]">
           <xsl:text>&#xA;        </xsl:text>
