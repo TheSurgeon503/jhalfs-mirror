@@ -65,7 +65,7 @@ for nv_id in $NV_LIST; do
   DUM_VER=1.0.0
   if [ $nv_id = kf5-intro ]; then
     DUM_VER=$(grep kf5-version $BLFS_DIR/packages.ent | \
-              sed 's/.*"\([^"]*\).*/\1/')
+              sed 's/[^"]*"\([^"]*\).*/\1/')
   fi
   cat >>$SPECIAL_FILE << EOF
     <xsl:when test="@id='$nv_id'">
