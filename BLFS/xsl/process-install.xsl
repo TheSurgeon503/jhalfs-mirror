@@ -16,6 +16,7 @@
          contains(string($current-instr),'tracker-miner') or
          contains(string($current-instr),'gtweak') or
          contains(string($current-instr),'query-immodules') or
+         contains(string($current-instr),'chgrp -v mail') or
          contains(string($current-instr),'gnome-control-center')">
 ]>
 

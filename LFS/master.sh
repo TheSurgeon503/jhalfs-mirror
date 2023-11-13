@@ -368,24 +368,24 @@ mk_SUDO: mk_LUSER
 	@sudo make BREAKPOINT=\$(BREAKPOINT) SUDO
 	@touch \$@
 
-mk_CHROOT: mk_SUDO
+mk_CHROOT: mk_SUDO devices
 	@\$(call echo_CHROOT_request)
 	@( sudo \$(CHROOT1) -c "cd \$(SCRIPT_ROOT) && make BREAKPOINT=\$(BREAKPOINT) CHROOT")
 	@touch \$@
 
-mk_BOOT: mk_CHROOT
+mk_BOOT: mk_CHROOT devices
 	@\$(call echo_CHROOT_request)
 	@( sudo \$(CHROOT1) -c "cd \$(SCRIPT_ROOT) && make BREAKPOINT=\$(BREAKPOINT) BOOT")
 	@touch \$@
 
-mk_BLFS_TOOL: create-sbu_du-report
+mk_BLFS_TOOL: create-sbu_du-report devices
 	@if [ "\$(ADD_BLFS_TOOLS)" = "y" ]; then \\
 	  \$(call sh_echo_PHASE,Building BLFS_TOOL); \\
 	  (sudo \$(CHROOT1) -c "make -C $BLFS_ROOT/work"); \\
 	fi;
 	@touch \$@
 
-mk_CUSTOM_TOOLS: mk_BLFS_TOOL
+mk_CUSTOM_TOOLS: mk_BLFS_TOOL devices
 	@if [ "\$(ADD_CUSTOM_TOOLS)" = "y" ]; then \\
 	  \$(call sh_echo_PHASE,Building CUSTOM_TOOLS); \\
 	  sudo mkdir -p ${BUILDDIR}${TRACKING_DIR}; \\
@@ -437,11 +437,11 @@ fi
     cat << EOF
 
 chroot1: devices
-	sudo \$(CHROOT1)
+	-sudo \$(CHROOT1)
 	\$(MAKE) teardown
 
 chroot: devices
-	sudo \$(CHROOT1)
+	-sudo \$(CHROOT1)
 	\$(MAKE) teardown
 
 SETUP:        $SETUP_TGT

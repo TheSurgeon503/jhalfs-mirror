@@ -116,7 +116,7 @@ EOF
 # So we have to read that command too, since it may be assumed
 # that the preceding package is a dependency of the following,
 # except the first.
-  list_cat="$(sed -n '/>cat/,/EOF</p' $file | grep -v 'cat\|EOF' |
+  list_cat="$(sed -n '/>cat/,/EOF</p' $file | grep -v 'cat\|EOF\|#' |
               awk '{ print $NF }' | sed 's/-&.*//')"
 
 # Rationale for the sed below: the following for breaks words at spaces (unless
@@ -170,7 +170,25 @@ EOF
 <!-- End dependencies -->
         </module>
 EOF
-    cat >> tmpfile << EOF
+#    cat >> tmpfile << EOF
+#        <xsl:element name="dependency">
+#          <xsl:attribute name="status">
+#            <xsl:value-of select="\$status"/>
+#          </xsl:attribute>
+#          <xsl:attribute name="build">
+#            <xsl:value-of select="\$build"/>
+#          </xsl:attribute>
+#          <xsl:attribute name="name">$packname</xsl:attribute>
+#          <xsl:attribute name="type">ref</xsl:attribute>
+#        </xsl:element>
+#EOF
+    precpack=$packname
+  done
+  cat >>$SPECIAL_FILE << EOF
+     </package>
+   </xsl:when>
+EOF
+  cat >> tmpfile << EOF
         <xsl:element name="dependency">
           <xsl:attribute name="status">
             <xsl:value-of select="\$status"/>
@@ -181,13 +199,6 @@ EOF
           <xsl:attribute name="name">$packname</xsl:attribute>
           <xsl:attribute name="type">ref</xsl:attribute>
         </xsl:element>
-EOF
-  done
-  cat >>$SPECIAL_FILE << EOF
-     </package>
-   </xsl:when>
-EOF
-  cat >> tmpfile << EOF
       </xsl:when>
 EOF
 done

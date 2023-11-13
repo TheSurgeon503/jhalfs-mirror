@@ -123,6 +123,33 @@
       <xsl:when test="string()='&lt;loginname&gt;'">
         <xsl:text>$USER</xsl:text>
       </xsl:when>
+<!-- for xorg environment. Note that libreoffice too uses &lt;PREFIX&gt; -->
+      <xsl:when test="string()='&lt;PREFIX&gt;' and
+                      ancestor::sect1[@id='xorg-env']">
+        <xsl:text>/usr</xsl:text>
+      </xsl:when>
+<!-- for libreoffice. Note that xorg environment too uses &lt;PREFIX&gt; -->
+      <xsl:when test="string()='&lt;PREFIX&gt;' and
+                      ancestor::sect1[@id='libreoffice']">
+                      <xsl:text>/opt/</xsl:text>
+                      <xsl:value-of select="ancestor::sect1/@xreflabel"/>
+      </xsl:when>
+<!-- for abiword -->
+      <xsl:when test="string()='&lt;lang&gt;'">
+        <xsl:choose>
+          <xsl:when test="starts-with($language,'en_US')">
+            <!-- normal.awt for en_US is already there, copy
+                 the one for en_GB (could be any other) -->
+            <xsl:text>en_GB</xsl:text>
+          </xsl:when>
+          <xsl:otherwise>
+            <!-- in general, there are normal.awt-ll_CC files-->
+            <xsl:copy-of select="$lang-ll"/>
+            <xsl:text>_</xsl:text>
+            <xsl:copy-of select="$lang-CC"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
       <xsl:otherwise>
         <xsl:text>**EDITME</xsl:text>
         <xsl:apply-templates/>

@@ -564,13 +564,6 @@ depends on !BOOK_BLFS
         bool "Strip Installed Binaries/Libraries"
         default n
 
-    config    DEL_LA_FILES
-        bool "Remove libtool .la files"
-        default y
-        help
-            #-- Remove files libxxx.la installed by libtool. For a rationale
-            #   see https://blog.flameeyes.eu/tags/lafiles/
-
     config    NO_PROGRESS_BAR
         bool "DO NOT use/display progress_bar"
         default n
@@ -619,6 +612,13 @@ menu "System configuration"
             #-- Fully qualified path to a kernel config file
             #   The config file will be copied to ${BUILD_DIR}/sources
             #   and renamed 'kernel-config'
+            #
+            #   Important: if the config file is out of date (missing
+            #   option), the kernel build will timeout instead of
+            #   waiting forever for an input. This will generate error
+            #   124. In this case, update your config file,
+            #   copy it to $BUILD_DIR/sources/kernel-config, and
+            #   restart the build.
     #--- End Kernel
 
     config    NCURSES5
@@ -960,6 +960,14 @@ depends on !BOOK_BLFS
         config    PKG_LST
             string "Package contents list"
             default "unpacked"
+
+        config    DEL_LA_FILES
+            bool "Remove libtool .la files"
+            default y
+            help
+                #-- Remove files libxxx.la installed by libtool. Only set to
+                #   "n" if you know what you are doing. For a rationale
+                #   see https://blog.flameeyes.eu/tags/lafiles/
 
     #--- End Internal Settings
     endmenu
