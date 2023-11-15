@@ -127,11 +127,19 @@ chapter_targets() {       #
 
       # If using optimizations, write the instructions
       case "${OPTIMIZE}$1${nb_chaps}${this_script}${REALSBU}" in
-          0* | *binutils-pass1y | 15* | 167* | 177*)
+          0* | *binutils-pass1y | 15* | 167* | 177*) ;;
+          *kernel*) ;; # No CFLAGS for kernel
+          *)  wrt_optimize "$name" ;;
+      esac
+      # MAKEFLAGS is set even if no optimization now.
+      # For new books, the scripts contain the MAKEFLAGS, so no
+      # need to set them in the envars except if binutils-pass1
+      # and REALSBU=y. For Old books, N_PARALLEL and JH_MAKEFLAGS
+      # are set and we must set the envars.
+      case "${mkf_included}${this_script}${REALSBU}" in
+          *binutils-pass1y)
               wrt_makeflags "$name" "-j1" "1" ;;
-          *kernel*) # No CFLAGS for kernel
-              wrt_makeflags "$name" "$JH_MAKEFLAGS" "$N_PARALLEL" ;;
-          *)  wrt_optimize "$name" &&
+          n*)
               wrt_makeflags "$name" "$JH_MAKEFLAGS" "$N_PARALLEL" ;;
       esac
     fi
@@ -251,6 +259,14 @@ build_Makefile() {           #
 #  echo chaps: ${chaps[*]}
 #  echo nb_chaps: $nb_chaps
 # end DEBUG
+
+  # We need to know if we have an old or a new book (with included MAKEFLAGS)
+  # we grep for MAKEFLAGS in chapter04 to find out.
+  if grep -q MAKEFLAGS chapter04/*; then
+	  mkf_included=y
+  else
+	  mkf_included=n
+  fi
 
   # Make a temporary file with all script targets
   for (( i = 4; i < nb_chaps+4; i++ )); do
