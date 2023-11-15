@@ -35,7 +35,7 @@ inline_doc
   local -r LFS_system="HOSTNAME INTERFACE IP_ADDR GATEWAY PREFIX BROADCAST DOMAIN DNS1 DNS2 FONT KEYMAP LOCAL LOG_LEVEL"
 
   # Full list of books settings
-  local -r   lfs_PARAM_LIST="$LFS_book   $GENERAL_common $LFS_build $LFS_system  $ADVANCED_chroot N_PARALLEL REALSBU SAVE_CH5 $ADVANCED_common"
+  local -r   lfs_PARAM_LIST="$LFS_book   $GENERAL_common $LFS_build $LFS_system  $ADVANCED_chroot ALL_CORES CPUSET N_PARALLEL REALSBU SAVE_CH5 $ADVANCED_common"
 #  local -r  blfs_PARAM_LIST="BRANCH_ID BLFS_ROOT BLFS_XML TRACKING_DIR"
 
   # Additional variables
@@ -133,8 +133,8 @@ inline_doc
       RETRYSRCDOWNLOAD) [[ "$GETPKG" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
       RETRYDOWNLOADCNT) [[ "$GETPKG" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
       DOWNLOADTIMEOUT)  [[ "$GETPKG" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
-      N_PARALLEL)       [[ "$OPTIMIZE" -gt "0" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
-      REALSBU)          [[ "$OPTIMIZE" = "2" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
+      CPUSET)           [[ "$HAVE_CGROUP" = "y" ]] && [[ "$ALL_CORES" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
+      N_PARALLEL)       [[ "$ALL_CORES" = "n" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
 
       # Envars that requires some validation
       LUSER)      echo -e "`eval echo $PARAM_VALS`"
