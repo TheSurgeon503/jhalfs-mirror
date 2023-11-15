@@ -167,7 +167,7 @@ inline_doc
       BOOT_CONFIG) [[ "${METHOD}" = "boot" ]] && validate_file -z -e -s ;;
 
         # Treatment of LANG parameter
-      LANG )  # See it the locale value has been set
+      LANG )  # See if the locale value has been set
                echo -n "`eval echo $PARAM_VALS`"
                [[ -z "${!config_param}" ]] &&
                  echo " -- Variable $config_param cannot be empty!" &&
