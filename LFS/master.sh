@@ -302,6 +302,17 @@ build_Makefile() {           #
     i=`expr $i + 1`
   done
 
+  # If CPUSET is defined and not equal to "all", then we define a first target
+  # that calls a script which re-enters make calling target all
+  if [ -n "$CPUSET" ] && [ "$CPUSET" != all ]; then
+(
+    cat << EOF
+
+all-with-cpuset:
+	@CPUSPEC="\$(CPUSET)" ./run-in-cgroup \$(MAKE) all
+EOF
+) >> $MKFILE
+  fi
   # Drop in the main target 'all:' and the chapter targets with each sub-target
   # as a dependency. Also prevent running targets in parallel.
 (

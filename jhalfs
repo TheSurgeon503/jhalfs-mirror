@@ -323,7 +323,7 @@ if [[ "$REBUILD_MAKEFILE" = "n" ]] ; then
   true >"$LOGDIR/$LOG"
 
 # Copy common helper files
-  cp "$COMMON_DIR"/{makefile-functions,progress_bar.sh} "$JHALFSDIR/"
+  cp "$COMMON_DIR"/{makefile-functions,progress_bar.sh,run-in-cgroup.sh} "$JHALFSDIR/"
 
 # Copy needed stylesheets
   cp "$COMMON_DIR"/{packages.xsl,chroot.xsl,kernfs.xsl} "$JHALFSDIR/"
