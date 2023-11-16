@@ -5,6 +5,8 @@ if [ -z "$CPUSPEC" ] || [ "$#" -lt 1 ]; then
 	exit 1
 fi
 
+ARGS="$@"
+
 set +e
 
 if type systemd-run >/dev/null 2>&1 ; then # systemd
@@ -17,12 +19,11 @@ elif type loginctl >/dev/null 2>&1 ; then #elogind
    sudo sh -c "echo +cpuset > /sys/fs/cgroup/cgroup.subtree_control"
    (
       sudo sh -c "echo $BASHPID > /sys/fs/cgroup/jhalfs/cgroup.procs"
-      sudo -u $(whoami) sh <<EOF
+      sudo sh -c "
          SESS_CGROUP=/sys/fs/cgroup/\$XDG_SESSION_ID
-         sudo sh -c "echo \\"$CPUSPEC\\" > \$SESS_CGROUP/cpuset.cpus"
-         (sudo sh -c "echo \$BASHPID > \$SESS_CGROUP/cgroup.procs" &&
-            exec $@)
-EOF
+         echo $CPUSPEC > \$SESS_CGROUP/cpuset.cpus
+	 ( echo \$BASHPID > \$SESS_CGROUP/cgroup.procs &&
+		 exec sudo -u $(whoami) $ARGS )"
    )
    sudo rmdir /sys/fs/cgroup/jhalfs
 else # no session manager
