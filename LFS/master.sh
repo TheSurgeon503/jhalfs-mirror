@@ -309,7 +309,7 @@ build_Makefile() {           #
     cat << EOF
 
 all-with-cpuset:
-	@CPUSPEC="\$(CPUSET)" ./run-in-cgroup \$(MAKE) all
+	@CPUSPEC="\$(CPUSET)" ./run-in-cgroup.sh \$(MAKE) all
 EOF
 ) >> $MKFILE
   fi
