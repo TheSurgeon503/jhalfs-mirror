@@ -68,7 +68,7 @@ extract_commands() {         #
   else
 	  JOBS="$N_PARALLEL"
   fi
-  if [ "REALSBU" = y ]; then JOBSBP1=1; else JOBSBP1="$JOBS"; fi
+  if [ "$REALSBU" = y ]; then JOBSBP1=1; else JOBSBP1="$JOBS"; fi
 
   # First profile the book, for revision and arch. Note that
   # MULTIBLIB is set to "default" if pure 64 bit book. In this case,
