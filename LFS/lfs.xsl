@@ -1249,6 +1249,11 @@ tar -xf $PACKAGE
 cd $PKGDIR
 </xsl:text>
     </xsl:if>
+    <xsl:text>
+export MAKEFLAGS="-j</xsl:text>
+    <xsl:value-of select="$jobs"/>
+    <xsl:text>"
+</xsl:text>
     <xsl:text>SECONDS=${PREV_SEC}
 
 # Start of LFS book script
