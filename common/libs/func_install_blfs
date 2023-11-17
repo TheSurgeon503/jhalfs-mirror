@@ -218,10 +218,10 @@ pushd $BUILDDIR$BLFS_ROOT/work
 # installation, using libxslt, which is not installed yet. So move
 # updating to the end of the process, adding an 'update' target
 sed -i -e '/xsltproc/,+6d' \
-       -e '/^all/s@$@ update@' \
+       -e '/^all/i update:' \
        -e 's/touch/@touch/' Makefile
 cat >> Makefile << EOF
-update:
+update: all
 	@echo Updating the tracking file
 	@for pack in \$\$(grep '<productname' ../$LFS_XML/tmp/lfs-full.xml | \\
 		sed 's/.*>\([^<]*\)<.*/\1/' | \\
