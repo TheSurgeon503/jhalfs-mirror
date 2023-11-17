@@ -31,6 +31,9 @@
   <!-- Parallelism (LFS >= 12.1) -->
   <xsl:param name="jobs" select="1"/>
 
+  <!-- value of jobs for binutils-pass1 -->
+  <xsl:param name="jobs-bp1" select="1"/>
+
   <!-- Install non wide character ncurses 5? -->
   <xsl:param name="ncurses5" select="'n'"/>
 
@@ -1251,7 +1254,14 @@ cd $PKGDIR
     </xsl:if>
     <xsl:text>
 export MAKEFLAGS="-j</xsl:text>
-    <xsl:value-of select="$jobs"/>
+    <xsl:choose>
+      <xsl:when test="@id='ch-tools-binutils-pass1'">
+        <xsl:value-of select="$jobs-bp1"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="$jobs"/>
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:text>"
 </xsl:text>
     <xsl:text>SECONDS=${PREV_SEC}
