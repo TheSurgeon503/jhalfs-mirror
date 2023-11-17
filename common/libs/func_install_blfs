@@ -136,7 +136,7 @@ STATS=n
 SRC_ARCHIVE=/sources
 BUILD_ROOT=/sources
 BUILD_SUBDIRS=y
-JOBS=$(if [ -n "$N_PARALLEL" ]; then echo $N_PARALLEL; else echo 1; fi)
+JOBS=$(if [ "$ALL_CORES" = y ]; then nproc; else echo $N_PARALLEL; fi)
 EOF
 for OPT_VAR in CFLAGS CXXFLAGS LDFLAGS; do
   eval optVal=\$${OPT_VAR}_$DEF_OPT_MODE
