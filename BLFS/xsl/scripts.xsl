@@ -302,7 +302,7 @@ cd $SRC_DIR</xsl:text>
         <xsl:apply-templates select="bridgehead[@renderas='sect3']"/>
       </xsl:when><!-- @role="package" -->
 
-      <xsl:when test="@role = 'qt4-prefix' or @role = 'qt5-prefix'">
+      <xsl:when test="@role = 'qt5-prefix' or @role = 'qt6-prefix'">
         <xsl:apply-templates select=".//screen[./userinput]"/>
       </xsl:when>
 
