@@ -453,15 +453,20 @@ depends on !BOOK_BLFS
     menu "Parallelism settings"
     if HAVE_NPROC
         config ALL_CORES
-        bool "Use all cores as in new books (say n for old books)"
+        bool "Use all cores"
         default y
         help
-              Use book instructions as written for parallelism since version
-              r12.0-87 included. If you answer no, then jhalfs will fall back
-              to a static number of cores, defined below. If you answer y, and
-              your system supports it, you'll be asked for a cpu set to use.
-                 There is no detection of book version. If the book version
-              is lower than r12.0-87, say no!
+              If you answer y, MAKEFLAGS will be set to "-j$(nproc)" at the
+              beginning of each package script, and book instructions will not
+              be changed otherwise. This will run the scripts with the same
+              settings as in the book since version r12.0-87 included. Before
+              that version, this will run the builds with all cores, but some
+              test suites may still be run sequentially. You'll be asked for
+              a CPU set to use, so that the number of jobs can still be limited
+              in this way (useful for measuring SBU values at -j4, for
+              example).
+              If you answer n, then jhalfs will fall back to a static number
+              of cores, defined below.
 
         if ALL_CORES && HAVE_CGROUP
             config CPUSET
