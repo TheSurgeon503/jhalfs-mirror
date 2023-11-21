@@ -441,10 +441,6 @@ echo Start Time: ${SECONDS} >> $INFOLOG
         </xsl:with-param>
       </xsl:call-template>
     </xsl:variable>
-    <xsl:variable name="first_letter"
-                  select="translate(substring($package,1,1),
-                                    'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-                                    'abcdefghijklmnopqrstuvwxyz')"/>
     <xsl:text>&#xA;</xsl:text>
     <xsl:value-of select="$varname"/>
     <xsl:text>=</xsl:text>
@@ -460,24 +456,9 @@ echo Start Time: ${SECONDS} >> $INFOLOG
     <xsl:text>" "$</xsl:text>
     <xsl:value-of select="$varname"/>
     <xsl:text>"
-  else&#xA;</xsl:text>
-    <!-- Download from upstream http -->
-    <xsl:if test="string-length($httpurl) &gt; 10">
-      <xsl:text>    wget -T 30 -t 5 "</xsl:text>
-      <xsl:value-of select="$httpurl"/>
-      <xsl:text>" ||&#xA;</xsl:text>
-    </xsl:if>
-    <!-- Download from upstream ftp -->
-    <xsl:if test="string-length($ftpurl) &gt; 10">
-      <xsl:text>    wget -T 30 -t 5 "</xsl:text>
-      <xsl:value-of select="$ftpurl"/>
-      <xsl:text>" ||&#xA;</xsl:text>
-    </xsl:if>
-    <!-- The FTP_SERVER mirror as a last resort -->
-    <xsl:text>    wget -T 30 -t 5 "${JH_FTP_SERVER}svn/</xsl:text>
-    <xsl:value-of select="$first_letter"/>
-    <xsl:text>/$</xsl:text>
-    <xsl:value-of select="$varname"/>
+  else<!-- Download from upstream http -->
+    wget -T 30 -t 5 "</xsl:text>
+    <xsl:value-of select="$httpurl"/>
     <xsl:text>"
   fi
 fi</xsl:text>
