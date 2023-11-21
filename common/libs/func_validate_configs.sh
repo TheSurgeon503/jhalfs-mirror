@@ -18,7 +18,7 @@ inline_doc
   # Common settings by Config.in sections and books family
   local -r     BOOK_common="COMMIT BOOK CUSTOM_TOOLS"
   local -r  GENERAL_common="LUSER LGROUP LHOME BUILDDIR CLEAN GETPKG SRC_ARCHIVE \
-                            SERVER RETRYSRCDOWNLOAD RETRYDOWNLOADCNT DOWNLOADTIMEOUT \
+                            RETRYSRCDOWNLOAD RETRYDOWNLOADCNT DOWNLOADTIMEOUT \
                             RUNMAKE"
   local -r    BUILD_chroot="TEST STRIP"
   local -r    BUILD_common="FSTAB CONFIG TIMEZONE PAGE LANG INSTALL_LOG"
@@ -129,7 +129,6 @@ inline_doc
       ITERATIONS)       [[ "$COMPARE" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
       TARGET32)         [[ -n "${TARGET32}" ]] &&  echo -e "`eval echo $PARAM_VALS`" ;;
       MIPS_LEVEL)       [[ "${ARCH}" = "mips" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
-      SERVER)           [[ "$GETPKG" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
       RETRYSRCDOWNLOAD) [[ "$GETPKG" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
       RETRYDOWNLOADCNT) [[ "$GETPKG" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
       DOWNLOADTIMEOUT)  [[ "$GETPKG" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;

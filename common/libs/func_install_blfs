@@ -179,7 +179,6 @@ pushd $BUILDDIR/sources
 # Remove `unpacked' files if some have been left
 sudo find . -name unpacked -exec rm \{\} \;
 if [ "$GETPKG" = "y" ]; then
-    JH_FTP_SERVER=$SERVER/pub/blfs/ \
     JH_SRC_ARCHIVE=${SRC_ARCHIVE:-/dev/null}     \
     $BUILDDIR$BLFS_ROOT/download_script
 else # Save the download script in case the user wants to run it later
