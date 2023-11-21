@@ -465,9 +465,8 @@ depends on !BOOK_BLFS
             #  out. If you select 'n' here, the commented test instructions
             #  do not stop on test suite failures.
 
-    menu "Test settings"
-    depends on    CONFIG_TESTS
     choice
+        depends on    CONFIG_TESTS
         prompt    "Tests level"
         default    TST_1
 
@@ -487,8 +486,6 @@ depends on !BOOK_BLFS
                 # are commented out.
 
     endchoice
-
-    endmenu # test settings
 
     config    TEST
         int
