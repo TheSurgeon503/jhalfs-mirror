@@ -857,15 +857,16 @@ depends on !BOOK_BLFS
         default y
 
     config    SAVE_CH5
-        bool "Save Chapter 5 work"
+        bool "Save temporary system work"
         depends on BOOK_LFS || BOOK_LFS_SYSD
         default n
         help
-            Save the state of jhalfs at the end of chapter 5:
+            Save the state of jhalfs after finishing building the temporary
+            system
             
             if you tick this item, the whole $LFS directory is
-            saved when chapter 5 is finished. It'll be in an xz
-            compressed tarball in the $LFS/jhalfs directory
+            saved when chapter 7 is finished. It'll be in a .tar
+            file in the $BUILD_DIR/jhalfs directory
 
     #--- ICA
     config    COMPARE
