@@ -136,8 +136,9 @@ STATS=n
 SRC_ARCHIVE=/sources
 BUILD_ROOT=/sources
 BUILD_SUBDIRS=y
-JOBS=$(if [ -n "$N_PARALLEL" ]; then echo $N_PARALLEL; else echo 1; fi)
+JOBS=$(if [ "$ALL_CORES" = y ]; then echo 0; else echo $N_PARALLEL; fi)
 EOF
+# The 0 value above is for using all cores
 for OPT_VAR in CFLAGS CXXFLAGS LDFLAGS; do
   eval optVal=\$${OPT_VAR}_$DEF_OPT_MODE
   if [ -n "$optVal" ] && [ "$optVal" != unset ]; then
@@ -179,7 +180,6 @@ pushd $BUILDDIR/sources
 # Remove `unpacked' files if some have been left
 sudo find . -name unpacked -exec rm \{\} \;
 if [ "$GETPKG" = "y" ]; then
-    JH_FTP_SERVER=$SERVER/pub/blfs/ \
     JH_SRC_ARCHIVE=${SRC_ARCHIVE:-/dev/null}     \
     $BUILDDIR$BLFS_ROOT/download_script
 else # Save the download script in case the user wants to run it later
@@ -218,10 +218,10 @@ pushd $BUILDDIR$BLFS_ROOT/work
 # installation, using libxslt, which is not installed yet. So move
 # updating to the end of the process, adding an 'update' target
 sed -i -e '/xsltproc/,+6d' \
-       -e '/^all/s@$@ update@' \
+       -e '/^all/i update:' \
        -e 's/touch/@touch/' Makefile
 cat >> Makefile << EOF
-update:
+update: all
 	@echo Updating the tracking file
 	@for pack in \$\$(grep '<productname' ../$LFS_XML/tmp/lfs-full.xml | \\
 		sed 's/.*>\([^<]*\)<.*/\1/' | \\

@@ -6,6 +6,8 @@
       extension-element-prefixes="exsl"
       version="1.0">
 
+  <xsl:param name="jobs_2" select="1"/>
+
   <xsl:template match="/">
     <xsl:apply-templates select="//sect1"/>
   </xsl:template>
@@ -55,6 +57,13 @@
   <xsl:template name="extract-chroot">
     <xsl:param name="instructions" select="''"/>
     <xsl:choose>
+      <xsl:when test="contains($instructions, '$(nproc || echo 1)')">
+        <xsl:call-template name="extract-chroot">
+          <xsl:with-param
+            name="instructions"
+            select="concat(substring-before($instructions, '$(nproc || echo 1)'), $jobs_2, substring-after($instructions, '$(nproc || echo 1)'))"/>
+        </xsl:call-template>
+      </xsl:when>
       <xsl:when test="not(starts-with($instructions,'&#xA;chroot')) and
                       contains($instructions, '&#xA;chroot')">
         <xsl:call-template name="extract-chroot">

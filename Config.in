@@ -1,3 +1,11 @@
+# Check for "nproc" presence:
+config HAVE_NPROC
+    def_bool $(shell,if nproc &>/dev/null; then echo y; else echo n; fi)
+
+# Check for "cpuset controller in cgroup v2" presence:
+config HAVE_CGROUP
+    def_bool $(shell,if grep -q cpuset /sys/fs/cgroup/cgroup.controllers 2>/dev/null; then echo y; else echo n; fi)
+
 menu "BOOK Settings"
 
     #--- BOOK/script
@@ -421,16 +429,6 @@ depends on !BOOK_BLFS
             #-- Number of seconds to wait for a download to start before
             #   timing out.
 
-    config SERVER
-        string "FTP mirror"
-        default "http://ftp.osuosl.org"
-        depends on GETPKG
-        help
-            #-- FTP mirror to download packages and patches if not found
-            #   in $SRC_ARCHIVE
-            #   As a last resort, the files will downloaded from upstream,
-            #   if possible.
-
     config    RUNMAKE
         bool    "Run the makefile"
         default n
@@ -451,6 +449,62 @@ endmenu
 menu "Build Settings"
 depends on !BOOK_BLFS
 
+    #--- Parallelism
+    menu "Parallelism settings"
+    if HAVE_NPROC
+        config ALL_CORES
+        bool "Use all cores"
+        default y
+        help
+              If you answer y, MAKEFLAGS will be set to "-j$(nproc)" at the
+              beginning of each package script, and book instructions will not
+              be changed otherwise. This will run the scripts with the same
+              settings as in the book since version r12.0-87 included. Before
+              that version, this will run the builds with all cores, but some
+              test suites may still be run sequentially. You'll be asked for
+              a CPU set to use, so that the number of jobs can still be limited
+              in this way (useful for measuring SBU values at -j4, for
+              example).
+              If you answer n, then jhalfs will fall back to a static number
+              of cores, defined below.
+
+        if ALL_CORES && HAVE_CGROUP
+            config CPUSET
+            string "set of cpus to use, or 'all' for all cpus"
+            default "all"
+            help
+                 See "List format" in cpuset(7). Choosing cpus depend
+                 on the topology of your processors. Sometimes two
+                 hyperthreads on the same core are numbered consecutively.
+                 For example for using all cores and no hyperthreading on
+                 a Haswell, use "0,2,4,6". Other brands may have a different
+                 topology, and may require e.g. "0-3" to use the first 4 cores.
+                 If not sure, keep the default.
+        endif
+
+    endif # HAVE_NPROC
+    if !HAVE_NPROC
+        config ALL_CORES
+        bool
+        default n
+    endif
+
+    config    N_PARALLEL
+        int "Number of parallel `make' jobs"
+        depends on !ALL_CORES
+        default 1
+        help
+            #-- The usual recommandation is (number of CPU cores)+1
+            #   Do not set for meaningful SBU calculations.
+
+    config    REALSBU
+        bool    "Build Binutils pass1 without parallelism (Real SBU)"
+        default    n
+        help
+           #-- Use -j1 in make invokation for Binutils pass1 to
+           #   get a valid SBU value.
+    endmenu # parallelism
+
     #--- Test Suites
     config    CONFIG_TESTS
         bool    "Run testsuites"
@@ -467,9 +521,8 @@ depends on !BOOK_BLFS
             #  out. If you select 'n' here, the commented test instructions
             #  do not stop on test suite failures.
 
-    menu "Test settings"
-    depends on    CONFIG_TESTS
     choice
+        depends on    CONFIG_TESTS
         prompt    "Tests level"
         default    TST_1
 
@@ -489,8 +542,6 @@ depends on !BOOK_BLFS
                 # are commented out.
 
     endchoice
-
-    endmenu # test settings
 
     config    TEST
         int
@@ -763,20 +814,59 @@ endmenu        #--- System configuration
 menu "Advanced Features"
 depends on !BOOK_BLFS
 
+    #--- Optimizations
+    config    CONFIG_OPTIMIZE
+        bool    "Optimization"
+        default    n
+        help
+            #   Opens a menu for various optimization settings:
+            #   Actual optimization flags MUST be defined in ./optimize/*
+            #   before activating this option.
+            #
+            # WARNING: The use of build optimizations may lead to build issues.
+            #   If the system doesn't work as expected, please rebuild
+            #   without optimizations before asking for support.
+    menu    "Optimization settings"
+        depends on CONFIG_OPTIMIZE
+
+    choice
+        prompt "Optimization level"
+        default OPT_1
+        help
+            #-- Optimization values are set in optimize/* files
+
+        config    OPT_1
+            bool    "Final system only"
+
+        config    OPT_2
+            bool    "Both temp tools and final system"
+
+    endchoice
+
+    endmenu # Optimization settings
+    config    OPTIMIZE
+        int
+        default    "0"    if !CONFIG_OPTIMIZE
+        default    "1"    if OPT_1
+        default    "2"    if OPT_2
+
+    #--- End Optimizations
+
     config    REPORT
         bool "Create SBU and disk usage report"
         default y
 
     config    SAVE_CH5
-        bool "Save Chapter 5 work"
+        bool "Save temporary system work"
         depends on BOOK_LFS || BOOK_LFS_SYSD
         default n
         help
-            Save the state of jhalfs at the end of chapter 5:
+            Save the state of jhalfs after finishing building the temporary
+            system
             
             if you tick this item, the whole $LFS directory is
-            saved when chapter 5 is finished. It'll be in an xz
-            compressed tarball in the $LFS/jhalfs directory
+            saved when chapter 7 is finished. It'll be in a .tar
+            file in the $BUILD_DIR/jhalfs directory
 
     #--- ICA
     config    COMPARE
@@ -808,59 +898,6 @@ depends on !BOOK_BLFS
         default y if COMPARE
 
     #--- End ICA
-
-    #--- Optimizations
-    config    CONFIG_OPTIMIZE
-        bool    "Optimization and parallelization"
-        default    n
-        help
-            #   Opens a menu for various optimization settings:
-            #   Actual optimization flags MUST be defined in ./optimize/*
-            #   before activating this option.
-            #
-            # WARNING: The use of build optimizations may lead to build issues.
-            #   If the system doesn't work as expected, please rebuild
-            #   without optimizations before asking for support.
-    menu    "Parallelization and Optimization settings"
-        depends on CONFIG_OPTIMIZE
-
-    config    N_PARALLEL
-        int "Number of parallel `make' jobs"
-        default 1
-        help
-            #-- The usual recommandation is (number of CPU cores)+1
-            #   Do not set for meaningful SBU calculations.
-
-    choice
-        prompt "Optimization level"
-        default OPT_1
-        help
-            #-- Optimization values are set in optimize/* files
-
-        config    OPT_1
-            bool    "Final system only"
-
-        config    OPT_2
-            bool    "Both temp tools and final system"
-
-    endchoice
-
-    config    REALSBU
-        bool    "Build Binutls pass1 without optimization (Real SBU)"
-        depends on OPT_2
-        default    n
-        help
-           #-- Use -j1 in make invokation for Binutils pass1 to
-           #   get a valid SBU value.
-
-    endmenu # Optimization settings
-    config    OPTIMIZE
-        int
-        default    "0"    if !CONFIG_OPTIMIZE
-        default    "1"    if OPT_1
-        default    "2"    if OPT_2
-
-    #--- End Optimizations
 
     #-- Internal Settings
     menu "Internal Settings (WARNING: for jhalfs developers only)"

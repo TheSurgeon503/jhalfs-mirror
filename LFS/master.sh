@@ -127,14 +127,17 @@ chapter_targets() {       #
 
       # If using optimizations, write the instructions
       case "${OPTIMIZE}$1${nb_chaps}${this_script}${REALSBU}" in
-          0* | *binutils-pass1y | 15* | 167* | 177*)
-              wrt_makeflags "$name" "-j1" "1" ;;
-          *kernel*) # No CFLAGS for kernel
-              wrt_makeflags "$name" "$JH_MAKEFLAGS" "$N_PARALLEL" ;;
-          *)  wrt_optimize "$name" &&
-              wrt_makeflags "$name" "$JH_MAKEFLAGS" "$N_PARALLEL" ;;
+          0* | *binutils-pass1y | 15* | 167* | 177*) ;;
+          *kernel*) ;; # No CFLAGS for kernel
+          *)  wrt_optimize "$name" ;;
       esac
-    fi
+      # There is no need to tweak MAKEFLAGS anymore, this is done
+      # by lfs.xsl. But still, NINJAJOBS needs to be set if
+      # N_PARALLEL is defined.
+      if [ -n "N_PARALLEL" ]; then
+         wrt_makeflags "$name" "$JH_MAKEFLAGS" "$N_PARALLEL"
+      fi
+    fi # end of package specific instructions
 
 # Some scriptlet have a special treatment; otherwise standard
     case "${this_script}" in
@@ -286,6 +289,17 @@ build_Makefile() {           #
     i=`expr $i + 1`
   done
 
+  # If CPUSET is defined and not equal to "all", then we define a first target
+  # that calls a script which re-enters make calling target all
+  if [ -n "$CPUSET" ] && [ "$CPUSET" != all ]; then
+(
+    cat << EOF
+
+all-with-cpuset:
+	@CPUSPEC="\$(CPUSET)" ./run-in-cgroup.sh \$(MAKE) all
+EOF
+) >> $MKFILE
+  fi
   # Drop in the main target 'all:' and the chapter targets with each sub-target
   # as a dependency. Also prevent running targets in parallel.
 (

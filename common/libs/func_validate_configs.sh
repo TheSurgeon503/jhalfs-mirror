@@ -18,7 +18,7 @@ inline_doc
   # Common settings by Config.in sections and books family
   local -r     BOOK_common="COMMIT BOOK CUSTOM_TOOLS"
   local -r  GENERAL_common="LUSER LGROUP LHOME BUILDDIR CLEAN GETPKG SRC_ARCHIVE \
-                            SERVER RETRYSRCDOWNLOAD RETRYDOWNLOADCNT DOWNLOADTIMEOUT \
+                            RETRYSRCDOWNLOAD RETRYDOWNLOADCNT DOWNLOADTIMEOUT \
                             RUNMAKE"
   local -r    BUILD_chroot="TEST STRIP"
   local -r    BUILD_common="FSTAB CONFIG TIMEZONE PAGE LANG INSTALL_LOG"
@@ -35,7 +35,7 @@ inline_doc
   local -r LFS_system="HOSTNAME INTERFACE IP_ADDR GATEWAY PREFIX BROADCAST DOMAIN DNS1 DNS2 FONT KEYMAP LOCAL LOG_LEVEL"
 
   # Full list of books settings
-  local -r   lfs_PARAM_LIST="$LFS_book   $GENERAL_common $LFS_build $LFS_system  $ADVANCED_chroot N_PARALLEL REALSBU SAVE_CH5 $ADVANCED_common"
+  local -r   lfs_PARAM_LIST="$LFS_book   $GENERAL_common $LFS_build $LFS_system  $ADVANCED_chroot ALL_CORES CPUSET N_PARALLEL REALSBU SAVE_CH5 $ADVANCED_common"
 #  local -r  blfs_PARAM_LIST="BRANCH_ID BLFS_ROOT BLFS_XML TRACKING_DIR"
 
   # Additional variables
@@ -129,12 +129,11 @@ inline_doc
       ITERATIONS)       [[ "$COMPARE" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
       TARGET32)         [[ -n "${TARGET32}" ]] &&  echo -e "`eval echo $PARAM_VALS`" ;;
       MIPS_LEVEL)       [[ "${ARCH}" = "mips" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
-      SERVER)           [[ "$GETPKG" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
       RETRYSRCDOWNLOAD) [[ "$GETPKG" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
       RETRYDOWNLOADCNT) [[ "$GETPKG" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
       DOWNLOADTIMEOUT)  [[ "$GETPKG" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
-      N_PARALLEL)       [[ "$OPTIMIZE" -gt "0" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
-      REALSBU)          [[ "$OPTIMIZE" = "2" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
+      CPUSET)           [[ "$HAVE_CGROUP" = "y" ]] && [[ "$ALL_CORES" = "y" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
+      N_PARALLEL)       [[ "$ALL_CORES" = "n" ]] && echo -e "`eval echo $PARAM_VALS`" ;;
 
       # Envars that requires some validation
       LUSER)      echo -e "`eval echo $PARAM_VALS`"
@@ -167,7 +166,7 @@ inline_doc
       BOOT_CONFIG) [[ "${METHOD}" = "boot" ]] && validate_file -z -e -s ;;
 
         # Treatment of LANG parameter
-      LANG )  # See it the locale value has been set
+      LANG )  # See if the locale value has been set
                echo -n "`eval echo $PARAM_VALS`"
                [[ -z "${!config_param}" ]] &&
                  echo " -- Variable $config_param cannot be empty!" &&

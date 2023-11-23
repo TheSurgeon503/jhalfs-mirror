@@ -175,6 +175,7 @@ SET_MISC=${SET_MISC:=n}
 SET_BLOWFISH=${SET_BLOWFISH:=n}
 UNICODE=${UNICODE:=n}
 LOCAL=${LOCAL:=n}
+ALL_CORES=${ALL_CORES:=n}
 REALSBU=${REALSBU:=n}
 SAVE_CH5=${SAVE_CH5:=n}
 
@@ -287,11 +288,13 @@ if [[ "$OPTIMIZE" != "0" ]]; then
   #
   # optimize configurations
   load_file optimize/opt_config 'Loading optimization config'
-  # The number of parallel jobs is taken from configuration now
-  # shellcheck disable=SC2034
-  JH_MAKEFLAGS="-j${N_PARALLEL}"
   # Validate optimize settings, if required
   validate_opt_settings
+fi
+# Parallelization is outside optimization, because it is now in the book
+if [[ "$ALL_CORES" = "n" ]]; then
+  # shellcheck disable=SC2034
+  JH_MAKEFLAGS="-j${N_PARALLEL}"
 fi
 #
 
@@ -320,7 +323,7 @@ if [[ "$REBUILD_MAKEFILE" = "n" ]] ; then
   true >"$LOGDIR/$LOG"
 
 # Copy common helper files
-  cp "$COMMON_DIR"/{makefile-functions,progress_bar.sh} "$JHALFSDIR/"
+  cp "$COMMON_DIR"/{makefile-functions,progress_bar.sh,run-in-cgroup.sh} "$JHALFSDIR/"
 
 # Copy needed stylesheets
   cp "$COMMON_DIR"/{packages.xsl,chroot.xsl,kernfs.xsl} "$JHALFSDIR/"

@@ -132,8 +132,6 @@ create_urls() {              #
 
   echo -n "Creating URLs file... "
   xsltproc --nonet --xinclude                \
-           --stringparam server "$SERVER"    \
-           --stringparam family lfs          \
            --stringparam pkgmngt "$PKGMNGT"  \
            --stringparam revision "$INITSYS" \
            --output ../sources/urls.lst      \
