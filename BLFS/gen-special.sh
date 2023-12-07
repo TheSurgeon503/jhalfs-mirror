@@ -200,11 +200,11 @@ EOF
         <module><xsl:text>&#xA;          </xsl:text>
           <xsl:element name="name">plasma-post-install</xsl:element>
           <xsl:element name="version">1.0.0</xsl:element>
-          <xsl:if test="document(\$installed-packages)//package[name='$packname']">
+          <xsl:if test="document(\$installed-packages)//package[name='plasma-post-install']">
             <xsl:element name="inst-version">
               <xsl:value-of
                 select="document(\$installed-packages
-                                )//package[name='$packname']/version"/>
+                                )//package[name='plasma-post-install']/version"/>
             </xsl:element>
           </xsl:if>
 <!-- Dependencies -->
