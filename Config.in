@@ -1,6 +1,6 @@
 # Check for "nproc" presence:
 config HAVE_NPROC
-    def_bool $(shell,if nproc &>/dev/null; then echo y; else echo n; fi)
+    def_bool $(shell,if nproc >/dev/null 2>&1; then echo y; else echo n; fi)
 
 # Check for "cpuset controller in cgroup v2" presence:
 config HAVE_CGROUP
