@@ -725,30 +725,41 @@ name=$(echo $packagedir | sed 's/-[[:digit:]].*//')
   </xsl:template>
 
   <xsl:template name="inst-instr">
-    <!-- This template is necessary because of the "kapidox" case in kf5:
+    <!-- This template is necessary because of the "libpciaccess" case in Xorg
+         libraries and the "kapidox" case in kf5:
          Normally, the general instructions extract the package and change
          to the extracted dir for running the installation instructions.
          When installing a sub-package of a compound package, the installation
          instructions to be run are located between a pushd and a popd,
-         *except* for kf5, where a popd occurs inside a case for kapidox...
+         *except* for Xorg libraries and kf5, where a popd occurs inside a
+         case for libpciaccess and kapidox...
          So we call this template with a "inst-instr" string that contains
          everything after the pushd.-->
     <xsl:param name="inst-instr"/>
     <xsl:param name="package"/>
     <xsl:choose>
-      <!-- first the case of kf5: there are two "popd"-->
+      <!-- first the cases where there are two "popd"-->
       <xsl:when test="contains(substring-after($inst-instr,'popd'),'popd')">
         <xsl:choose>
           <xsl:when test="$package='kapidox'">
             <!-- only the instructions inside the "case" and before popd -->
             <xsl:copy-of select="substring-after(substring-before($inst-instr,'popd'),'kapidox)')"/>
           </xsl:when>
+          <xsl:when test="$package='libpciaccess'">
+            <!-- only the instructions inside the "case" and before popd -->
+            <xsl:copy-of select="substring-after(substring-before($inst-instr,'popd'),'libpciaccess* )')"/>
+          </xsl:when>
           <xsl:otherwise>
-            <!-- all what is after the esac -->
+            <!-- We first copy what is before the first "as_root", then what is
+            after the first "popd", by calling the template again. The
+            reason for excluding "as_root" is that the output template takes
+            special action when it sees "as_root", which generates bogus code
+            if there are several of those...-->
+            <xsl:copy-of select="substring-before($inst-instr,'as_root')"/>
             <xsl:call-template name="inst-instr">
               <xsl:with-param
                 name="inst-instr"
-                select="substring-after($inst-instr,'esac&#xA;')"/>
+                select="substring-after($inst-instr,'popd')"/>
             </xsl:call-template>
           </xsl:otherwise>
         </xsl:choose>
