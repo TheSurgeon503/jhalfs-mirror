@@ -112,6 +112,9 @@
 <!-- for MIT-Kerberos config file -->
       <xsl:when test="string()='&lt;EXAMPLE.ORG&gt;'">
         <xsl:copy-of select="$DOMAINNAME"/>
+        <xsl:if test="contains(preceding-sibling::text()[1],'kdb5_util')">
+          <xsl:text> -P rtpw </xsl:text>
+        </xsl:if>
       </xsl:when>
       <xsl:when test="string()='&lt;example.org&gt;'">
         <xsl:copy-of select="$domainname"/>
@@ -121,7 +124,16 @@
       </xsl:when>
 <!-- in this case, even root can be used -->
       <xsl:when test="string()='&lt;loginname&gt;'">
+        <xsl:if test="contains(preceding-sibling::text()[1],'-policy')">
+          <xsl:text>-pw lupw </xsl:text>
+        </xsl:if>
         <xsl:text>$USER</xsl:text>
+        <xsl:if test="contains(preceding-sibling::text()[1],'kinit')">
+          <xsl:text> &lt;&lt; PASS_EOF
+lupw
+PASS_EOF
+</xsl:text>
+        </xsl:if>
       </xsl:when>
 <!-- for xorg environment. Note that libreoffice too uses &lt;PREFIX&gt; -->
       <xsl:when test="string()='&lt;PREFIX&gt;' and

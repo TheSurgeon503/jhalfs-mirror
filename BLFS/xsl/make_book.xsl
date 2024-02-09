@@ -57,19 +57,21 @@
 <!-- apply-templates for each item in the list.
      Normally, those items are id of nodes.
      Those nodes can be sect1 (normal case),
-     sect2 (python modules or DBus bindings)
-     bridgehead (perl modules)
-     para (dependency of perl modules).
+     sect2 (python/perl modules/dependencies )
      The templates after this one treat each of those cases.
-     However, some items are xorg package names, and not id.
+     However, some items are sub-packages of compound packages (xorg7-*,
+     kf5, plasma), and not id.
      We need special instructions in that case.
      The difficulty is that some of those names *are* id's,
      because they are referenced in the index.
-     Hopefully, none of those id's are sect{1,2}, bridgehead or para...-->
+     Hopefully, none of those id's are sect{1,2}...
+     We also need a special template for plasma-post-install,
+     because this one is not an id at all!-->
   <xsl:template name="apply-list">
     <xsl:param name="list" select="''"/>
     <xsl:if test="string-length($list) &gt; 0">
       <xsl:choose>
+        <!-- iterate if there are several packages in list -->
         <xsl:when test="contains($list,' ')">
           <xsl:call-template name="apply-list">
             <xsl:with-param name="list"
@@ -80,6 +82,8 @@
                             select="substring-after($list,' ')"/>
           </xsl:call-template>
         </xsl:when>
+        <!-- From now on, $list contains only one package -->
+        <!-- If it is a group, do nothing -->
         <xsl:when test="contains($list,'groupxx')"/>
         <xsl:otherwise>
           <xsl:variable name="is-lfs">
@@ -90,6 +94,7 @@
           </xsl:variable>
           <xsl:choose>
             <xsl:when test="$is-lfs='true'">
+            <!-- LFS package -->
               <xsl:message>
                 <xsl:value-of select="$list"/>
                 <xsl:text> is an lfs package</xsl:text>
@@ -100,7 +105,7 @@
               </xsl:call-template>
             </xsl:when>
             <xsl:when test="contains(concat($list,' '),'-pass1 ')">
-<!-- We need to do it only for sect1 and sect2, because of libva -->
+<!-- We need to do it for both sect1 and sect2, because of libva -->
               <xsl:variable
                    name="real-id"
                    select="substring-before(concat($list,' '),'-pass1 ')"/>
@@ -111,12 +116,21 @@
                 <xsl:apply-templates select="id($real-id)" mode="pass1-sect2"/>
               </xsl:if>
             </xsl:when>
-            <xsl:when test="not(id($list)[self::sect1 or self::sect2 or self::para or self::bridgehead])">
+            <xsl:when test="$list='plasma-post-install'">
               <xsl:apply-templates
-                   select="//sect1[contains(@id,'xorg7')
-                               and contains(string(.//userinput),
-                                            concat($list,'-'))]"
-                   mode="xorg">
+                select="//sect1[@id='plasma5-build']"
+                mode="plasma-post-install"/>
+            </xsl:when>
+            <xsl:when test="not(id($list)[self::sect1 or self::sect2])">
+              <!-- This is a sub-package: parse the corresponding compound
+                   package-->
+              <xsl:apply-templates
+                select="//sect1[(contains(@id,'xorg7') or
+                                 contains(@id,'frameworks') or
+                                 contains(@id,'plasma5'))
+                                 and .//userinput/literal[contains(string(),
+                                            concat($list,'-'))]]"
+                 mode="compound">
                 <xsl:with-param name="package" select="$list"/>
               </xsl:apply-templates>
             </xsl:when>
@@ -495,7 +509,7 @@
 <!-- we have got an xorg package. We are at the installation page
      but now we need to make an autonomous page from the global
      one -->
-  <xsl:template match="sect1" mode="xorg">
+  <xsl:template match="sect1" mode="compound">
     <xsl:param name="package"/>
     <xsl:variable name="tarball">
       <xsl:call-template name="tarball">
@@ -504,114 +518,146 @@
                         select="string(.//userinput[starts-with(string(),'cat ')])"/>
       </xsl:call-template>
     </xsl:variable>
-    <xsl:variable name="md5sum">
-      <xsl:call-template name="md5sum">
-        <xsl:with-param name="package" select="concat(' ',$package,'-')"/>
-        <xsl:with-param name="cat-md5"
-                        select=".//userinput[starts-with(string(),'cat ')]"/>
-      </xsl:call-template>
-    </xsl:variable>
-    <xsl:variable name="download-dir">
-      <xsl:call-template name="download-dir">
-        <xsl:with-param name="package" select="concat(' ',$package,'-')"/>
-        <xsl:with-param name="cat-md5"
-                        select=".//userinput[starts-with(string(),'cat ')]"/>
-      </xsl:call-template>
-    </xsl:variable>
-    <xsl:variable name="install-instructions">
-      <xsl:call-template name="inst-instr">
-        <xsl:with-param name="inst-instr"
-                        select=".//userinput[starts-with(string(),'for ')]"/>
-      </xsl:call-template>
-    </xsl:variable>
-    <xsl:element name="sect1">
-      <xsl:attribute name="id"><xsl:value-of select="$package"/></xsl:attribute>
-      <xsl:processing-instruction name="dbhtml">
-         filename="<xsl:value-of select='$package'/>.html"
-      </xsl:processing-instruction>
-      <title><xsl:value-of select="$package"/></title>
-      <sect2 role="package">
-        <title>Introduction to <xsl:value-of select="$package"/></title>
-        <bridgehead renderas="sect3">Package Information</bridgehead>
-        <itemizedlist spacing="compact">
-          <listitem>
-            <para>Download (HTTP): <xsl:element name="ulink">
-              <xsl:attribute name="url">
-                <xsl:value-of
-                   select=".//para[contains(string(),'(HTTP)')]/ulink/@url"/>
-                <xsl:value-of select="$download-dir"/>
-                <xsl:value-of select="$tarball"/>
-              </xsl:attribute>
-             </xsl:element>
-            </para>
-          </listitem>
-          <listitem>
-            <para>Download (FTP): <xsl:element name="ulink">
-              <xsl:attribute name="url">
-                <xsl:value-of
-                   select=".//para[contains(string(),'(FTP)')]/ulink/@url"/>
-                <xsl:value-of select="$download-dir"/>
-                <xsl:value-of select="$tarball"/>
-              </xsl:attribute>
-             </xsl:element>
-            </para>
-          </listitem>
-          <listitem>
-            <para>
-              Download MD5 sum: <xsl:value-of select="$md5sum"/>
-            </para>
-          </listitem>
-        </itemizedlist>
-        <!-- If there is an additional download, we need to output that -->
-        <xsl:if test=".//bridgehead[contains(string(),'Additional')]">
-          <xsl:copy-of
-                 select=".//bridgehead[contains(string(),'Additional')]"/>
-          <xsl:copy-of
-                 select=".//bridgehead[contains(string(),'Additional')]
-                         /following-sibling::itemizedlist[1]"/>
-        </xsl:if>
-      </sect2>
-      <sect2 role="installation">
-        <title>Installation of <xsl:value-of select="$package"/></title>
+    <!-- Unfortunately, there are packages in kf5 and plasma5 that
+         starts in the same way: for example kwallet in kf5
+         and kwallet-pam in plasma. So we may arrive here with
+         package=kwallet and tarball=kwallet-pam-(version).tar.xz.
+         We should not continue in this case. For checking, transform
+         digits into X, and check that package-X occurs in tarball. We
+         have to translate package too, since it may contain digits.-->
+    <xsl:if test=
+        "contains(translate($tarball,'0123456789','XXXXXXXXXX'),
+                  concat(translate($package,'0123456789','XXXXXXXXXX'),'-X'))">
+      <xsl:variable name="md5sum">
+        <xsl:call-template name="md5sum">
+          <xsl:with-param name="package" select="concat(' ',$package,'-')"/>
+          <xsl:with-param name="cat-md5"
+                          select=".//userinput[starts-with(string(),'cat ')]"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="download-dir">
+        <xsl:call-template name="download-dir">
+          <xsl:with-param name="package" select="concat(' ',$package,'-')"/>
+          <xsl:with-param name="cat-md5"
+                          select=".//userinput[starts-with(string(),'cat ')]"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="install-instructions">
+        <xsl:call-template name="inst-instr">
+          <xsl:with-param name="inst-instr"
+            select=
+              "substring-after(
+                 substring-after(.//userinput[starts-with(string(),'for ') or
+                                              starts-with(string(),'while ')],
+                                 'pushd'),
+                 '&#xA;')"/>
+          <xsl:with-param name="package" select="$package"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:element name="sect1">
+        <xsl:attribute name="id">
+          <xsl:value-of select="$package"/>
+        </xsl:attribute>
+        <xsl:processing-instruction name="dbhtml">
+           filename="<xsl:value-of select='$package'/>.html"
+        </xsl:processing-instruction>
+        <title><xsl:value-of select="$package"/></title>
+        <sect2 role="package">
+          <title>Introduction to <xsl:value-of select="$package"/></title>
+          <bridgehead renderas="sect3">Package Information</bridgehead>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para>Download (HTTP): <xsl:element name="ulink">
+                <xsl:attribute name="url">
+                  <xsl:value-of
+                     select=".//para[contains(string(),'(HTTP)')]/ulink/@url"/>
+                  <xsl:value-of select="$download-dir"/>
+                  <!-- $download-dir contains the trailing / for xorg,
+                       but not for KDE... -->
+                  <xsl:if test="contains(@id,'frameworks') or
+                                contains(@id,'plasma5')">
+                    <xsl:text>/</xsl:text>
+                  </xsl:if>
+                  <!-- Some kf5 packages are in a subdirectory -->
+                  <xsl:if test="$package='khtml' or
+                                $package='kdelibs4support' or
+                                $package='kdesignerplugin' or
+                                $package='kdewebkit' or
+                                $package='kjs' or
+                                $package='kjsembed' or
+                                $package='kmediaplayer' or
+                                $package='kross' or
+                                $package='kxmlrpcclient'">
+                    <xsl:text>portingAids/</xsl:text>
+                  </xsl:if>
+                  <xsl:value-of select="$tarball"/>
+                </xsl:attribute>
+               </xsl:element>
+              </para>
+            </listitem>
+            <!-- don't use FTP, although they are available for xorg -->
+            <listitem>
+              <para>Download (FTP): <ulink url=" "/>
+              </para>
+            </listitem>
+            <listitem>
+              <para>
+                Download MD5 sum: <xsl:value-of select="$md5sum"/>
+              </para>
+            </listitem>
+          </itemizedlist>
+          <!-- If there is an additional download, we need to output that -->
+          <xsl:if test=".//bridgehead[contains(string(),'Additional')]">
+            <xsl:copy-of
+                   select=".//bridgehead[contains(string(),'Additional')]"/>
+            <xsl:copy-of
+                   select=".//bridgehead[contains(string(),'Additional')]
+                           /following-sibling::itemizedlist[1]"/>
+          </xsl:if>
+        </sect2>
+        <sect2 role="installation">
+          <title>Installation of <xsl:value-of select="$package"/></title>
 
-        <para>
-          Install <application><xsl:value-of select="$package"/></application>
-          by running the following commands:
-        </para>
+          <para>
+            Install <application><xsl:value-of select="$package"/></application>
+            by running the following commands:
+          </para>
+          <!-- packagedir is used in xorg lib instructions -->
+          <screen><userinput>packagedir=<xsl:value-of
+                      select="substring-before($tarball,'.tar.')"/>
+           <!-- name is used in kf5 instructions -->
+            <xsl:text>
+name=$(echo $packagedir | sed 's/-[[:digit:]].*//')
+</xsl:text>
+            <xsl:value-of select="substring-before($install-instructions,
+                                                   'as_root')"/>
+          </userinput></screen>
 
-        <screen><userinput>packagedir=<xsl:value-of
-                    select="substring-before($tarball,'.tar.')"/>
-          <xsl:text>&#xA;</xsl:text>
-          <xsl:value-of select="substring-before($install-instructions,
-                                                 'as_root')"/>
-        </userinput></screen>
-
-        <para>
-          Now as the <systemitem class="username">root</systemitem> user:
-        </para>
-        <screen role='root'>
-          <userinput><xsl:value-of select="substring-after(
-                                                 $install-instructions,
-                                                 'as_root')"/>
-          </userinput>
-        </screen>
-      </sect2>
-    </xsl:element><!-- sect1 -->
+          <para>
+            Now as the <systemitem class="username">root</systemitem> user:
+          </para>
+          <screen role='root'>
+            <userinput><xsl:value-of select="substring-after(
+                                                   $install-instructions,
+                                                   'as_root')"/>
+            </userinput>
+          </screen>
+        </sect2>
+      </xsl:element><!-- sect1 -->
+    </xsl:if>
 
   </xsl:template>
 
 <!-- get the tarball name from the text that comes from the .md5 file -->
   <xsl:template name="tarball">
+    <!-- $package must start with a space, and finish with a "-", to be
+         sure to match exactly the package. Note that if we have two
+         packages named e.g. "pkg1" and "pkg1-add", the second one may be
+         matched by " pkg1-". So this only works if "pkg1" comes before
+         "pkg1-add" in the md5 file. Presently this is the case in the book...
+    -->
     <xsl:param name="package"/>
     <xsl:param name="cat-md5"/>
-<!-- DEBUG
-<xsl:message><xsl:text>Entering "tarball" template:
-  package is: </xsl:text>
-<xsl:value-of select="$package"/><xsl:text>
-  cat-md5 is: </xsl:text>
-<xsl:value-of select="$cat-md5"/>
-</xsl:message>
-END DEBUG -->
     <xsl:choose>
       <xsl:when test="contains(substring-before($cat-md5,$package),'&#xA;')">
         <xsl:call-template name="tarball">
@@ -679,19 +725,103 @@ END DEBUG -->
   </xsl:template>
 
   <xsl:template name="inst-instr">
+    <!-- This template is necessary because of the "libpciaccess" case in Xorg
+         libraries and the "kapidox" case in kf5:
+         Normally, the general instructions extract the package and change
+         to the extracted dir for running the installation instructions.
+         When installing a sub-package of a compound package, the installation
+         instructions to be run are located between a pushd and a popd,
+         *except* for Xorg libraries and kf5, where a popd occurs inside a
+         case for libpciaccess and kapidox...
+         So we call this template with a "inst-instr" string that contains
+         everything after the pushd.-->
     <xsl:param name="inst-instr"/>
+    <xsl:param name="package"/>
     <xsl:choose>
-      <xsl:when test="contains($inst-instr,'pushd')">
-        <xsl:call-template name="inst-instr">
-          <xsl:with-param name="inst-instr"
-                          select="substring-after(
-                                   substring-after($inst-instr,'pushd'),
-                                   '&#xA;')"/>
-        </xsl:call-template>
+      <!-- first the cases where there are two "popd"-->
+      <xsl:when test="contains(substring-after($inst-instr,'popd'),'popd')">
+        <xsl:choose>
+          <xsl:when test="$package='kapidox'">
+            <!-- only the instructions inside the "case" and before popd -->
+            <xsl:copy-of select="substring-after(substring-before($inst-instr,'popd'),'kapidox)')"/>
+          </xsl:when>
+          <xsl:when test="$package='libpciaccess'">
+            <!-- only the instructions inside the "case" and before popd -->
+            <xsl:copy-of select="substring-after(substring-before($inst-instr,'popd'),'libpciaccess* )')"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <!-- We first copy what is before the first "as_root", then what is
+            after the first "popd", by calling the template again. The
+            reason for excluding "as_root" is that the output template takes
+            special action when it sees "as_root", which generates bogus code
+            if there are several of those...-->
+            <xsl:copy-of select="substring-before($inst-instr,'as_root')"/>
+            <xsl:call-template name="inst-instr">
+              <xsl:with-param
+                name="inst-instr"
+                select="substring-after($inst-instr,'popd')"/>
+            </xsl:call-template>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:when>
       <xsl:otherwise>
+        <!-- normal case: everything that is before popd -->
         <xsl:copy-of select="substring-before($inst-instr,'popd')"/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+
+  <xsl:template match="sect1" mode="plasma-post-install">
+    <xsl:variable name="package" select="'plasma-post-install'"/>
+    <xsl:element name="sect1">
+      <xsl:attribute name="id">
+        <xsl:value-of select="$package"/>
+      </xsl:attribute>
+      <xsl:processing-instruction name="dbhtml">
+         filename="<xsl:value-of select='$package'/>.html"
+      </xsl:processing-instruction>
+      <title><xsl:value-of select="$package"/></title>
+      <sect2 role="installation">
+        <title>Installation of <xsl:value-of select="$package"/></title>
+
+        <para>
+          Install <application><xsl:value-of select="$package"/></application>
+          by running the following commands:
+        </para>
+        <screen role="root">
+          <userinput>
+            <xsl:call-template name="plasma-sessions">
+              <xsl:with-param
+                name="p-sessions-text"
+                select="string(.//userinput[contains(text(),'xsessions')])"/>
+            </xsl:call-template>
+          </userinput>
+        </screen>
+        <xsl:copy-of select=".//screen[@role='root']"/>
+      </sect2>
+    </xsl:element><!-- sect1 -->
+  </xsl:template>
+
+  <xsl:template name="plasma-sessions">
+    <xsl:param name="p-sessions-text"/>
+    <xsl:choose>
+      <xsl:when test="string-length($p-sessions-text)=0"/>
+      <xsl:when test="contains($p-sessions-text,'as_root')">
+        <xsl:call-template name="plasma-sessions">
+          <xsl:with-param
+            name="p-sessions-text"
+            select="substring-before($p-sessions-text,'as_root')"/>
+        </xsl:call-template>
+        <xsl:call-template name="plasma-sessions">
+          <xsl:with-param
+            name="p-sessions-text"
+            select="substring-after($p-sessions-text,'as_root ')"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:copy-of select="$p-sessions-text"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
 </xsl:stylesheet>
