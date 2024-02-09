@@ -83,10 +83,6 @@ case $1 in
   junit*|inih*) # can contain -rd.d or just -d.d
     VERSION=$(echo $1 | sed 's/^.*[r-]//')
     ;;
-  boost*) # $1 is of the form boost_1_dd_0. Since sed is greedy, the default
-          # case takes only "0" for VERSION
-    VERSION=$(echo $1 | sed 's/boost_//' | sed 's/_/./g')
-    ;;
   *)
     VERSION=$(echo $1 | sed 's/^.*[-_]\([0-9]\)/\1/' | sed 's/_/./g')
     ;;
